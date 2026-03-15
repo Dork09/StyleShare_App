@@ -1,0 +1,68 @@
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:dataBindingMergeDependencyArtifactsDebug UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:generateDebugResources
+> Task :app:processDebugGoogleServices UP-TO-DATE
+> Task :app:mergeDebugResources
+> Task :app:packageDebugResources
+> Task :app:processDebugNavigationResources
+> Task :app:generateSafeArgsDebug UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:parseDebugLocalResources
+> Task :app:processDebugMainManifest
+> Task :app:dataBindingGenBaseClassesDebug
+> Task :app:processDebugManifest
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:processDebugManifestForPackage
+> Task :app:processDebugResources
+> Task :app:kaptGenerateStubsDebugKotlin
+> Task :app:kaptDebugKotlin
+
+> Task :app:compileDebugKotlin
+w: file:///C:/Projects/StyleShare/app/src/main/java/com/example/styleshare/data/local/db/AppDatabase.kt:59:22 'fun fallbackToDestructiveMigration(): RoomDatabase.Builder<AppDatabase>' is deprecated. Replace by overloaded version with parameter to indicate if all tables should be dropped or not.
+w: file:///C:/Projects/StyleShare/app/src/main/java/com/example/styleshare/ui/home/HomeFragment.kt:133:13 'fun requestPermissions(p0: Array<(out) String!>, p1: Int): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Projects/StyleShare/app/src/main/java/com/example/styleshare/ui/home/HomeFragment.kt:158:18 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///C:/Projects/StyleShare/app/src/main/java/com/example/styleshare/ui/home/HomeFragment.kt:163:15 'fun onRequestPermissionsResult(p0: Int, p1: Array<(out) String!>, p2: IntArray): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Projects/StyleShare/app/src/main/java/com/example/styleshare/ui/home/HomeFragment.kt:182:55 'constructor(p0: String!, p1: String!): Locale' is deprecated. Deprecated in Java.
+w: file:///C:/Projects/StyleShare/app/src/main/java/com/example/styleshare/ui/home/HomeFragment.kt:183:33 'fun getFromLocation(p0: Double, p1: Double, p2: Int): (Mutable)List<Address!>?' is deprecated. Deprecated in Java.
+w: file:///C:/Projects/StyleShare/app/src/main/java/com/example/styleshare/ui/profile/EditProfileFragment.kt:67:55 Unnecessary safe call on a non-null receiver of type 'UserEntity'.
+w: file:///C:/Projects/StyleShare/app/src/main/java/com/example/styleshare/ui/profile/EditProfileFragment.kt:68:50 Unnecessary safe call on a non-null receiver of type 'UserEntity'.
+w: file:///C:/Projects/StyleShare/app/src/main/java/com/example/styleshare/ui/profile/EditProfileFragment.kt:70:48 Unnecessary safe call on a non-null receiver of type 'UserEntity'.
+w: file:///C:/Projects/StyleShare/app/src/main/java/com/example/styleshare/ui/profile/ProfileFragment.kt:44:54 Unnecessary safe call on a non-null receiver of type 'UserEntity'.
+w: file:///C:/Projects/StyleShare/app/src/main/java/com/example/styleshare/ui/profile/ProfileFragment.kt:45:49 Unnecessary safe call on a non-null receiver of type 'UserEntity'.
+w: file:///C:/Projects/StyleShare/app/src/main/java/com/example/styleshare/ui/profile/ProfileFragment.kt:47:39 Unnecessary safe call on a non-null receiver of type 'UserEntity'.
+
+> Task :app:compileDebugJavaWithJavac
+> Task :app:dexBuilderDebug
+> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:mergeDebugJavaResource UP-TO-DATE
+> Task :app:mergeProjectDexDebug
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect
+> Task :app:assembleDebug
+
+BUILD SUCCESSFUL in 2m 29s
+44 actionable tasks: 19 executed, 25 up-to-date
