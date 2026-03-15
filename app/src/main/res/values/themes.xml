@@ -1,9 +1,28 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.StyleShare" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.StyleShare" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Main colors -->
+        <item name="colorPrimary">@color/pink_gradient_start</item>
+        <item name="colorPrimaryVariant">@color/purple_gradient_end</item>
+        <item name="colorSecondary">@color/purple_gradient_end</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        <!-- Background & Surface -->
+        <item name="android:windowBackground">@color/bg_light</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        
+        <!-- Text Colors -->
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+
+        <!-- System bars -->
+        <item name="android:statusBarColor">@color/bg_light</item>
+        <!-- For light status bar, we need to make icons dark -->
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:navigationBarColor">@color/white</item>
+        <item name="android:windowLightNavigationBar">true</item>
     </style>
 
-    <style name="Theme.StyleShare" parent="Base.Theme.StyleShare" />
 </resources>

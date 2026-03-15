@@ -1,60 +1,81 @@
+/**
+ * מטרת הקובץ:
+ * מסך מועדפים:
+ * RecyclerView שמציג רק מועדפים
+ */
 package com.example.styleshare.ui.favorites
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.styleshare.R
+import com.example.styleshare.databinding.FragmentFavoritesBinding
+import com.example.styleshare.ui.home.LooksAdapter
+import com.example.styleshare.utils.Result
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+class FavoritesFragment : Fragment(R.layout.fragment_favorites) {
 
-/**
- * A simple [Fragment] subclass.
- * Use the [FavoritesFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
-class FavoritesFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+    private var _binding: FragmentFavoritesBinding? = null
+    private val binding get() = _binding!!
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private val vm: FavoritesViewModel by viewModels()
+    private lateinit var adapter: LooksGridAdapter
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_favorites, container, false)
-    }
+    /** חיבור UI */
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        _binding = FragmentFavoritesBinding.bind(view)
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment FavoritesFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            FavoritesFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+        vm.init(requireContext())
+
+        adapter = LooksGridAdapter(
+            items = emptyList(),
+            onItemClick = { look ->
+                val action = FavoritesFragmentDirections
+                    .actionFavoritesFragmentToLookDetailsFragment(look.id)
+                findNavController().navigate(action)
+            },
+            onFavClick = { look ->
+                // במועדפים נשלח לפרטים כדי לשנות אם רוצים
+                val action = FavoritesFragmentDirections
+                    .actionFavoritesFragmentToLookDetailsFragment(look.id)
+                findNavController().navigate(action)
+            }
+        )
+
+        binding.rv.layoutManager = androidx.recyclerview.widget.GridLayoutManager(requireContext(), 2)
+        binding.rv.adapter = adapter
+
+        vm.state.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is Result.Loading -> binding.progress.visibility = View.VISIBLE
+                is Result.Success -> {
+                    binding.progress.visibility = View.GONE
+                    adapter.submitList(state.data)
+                    binding.tvEmpty.visibility = if (state.data.isEmpty()) View.VISIBLE else View.GONE
+                }
+                is Result.Error -> {
+                    binding.progress.visibility = View.GONE
+                    binding.tvEmpty.visibility = View.VISIBLE
+                    binding.tvEmpty.text = state.message
                 }
             }
+        }
+
+        vm.loadFavorites()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        vm.loadFavorites()
+    }
+
+    /** ניקוי */
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

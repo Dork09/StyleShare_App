@@ -1,5 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">StyleShare</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_home">בית</string>
+    <string name="nav_create">הוספה</string>
+    <string name="nav_favorites">מועדפים</string>
+    <string name="nav_my_looks">הלוקים שלי</string>
+    <string name="nav_profile">פרופיל</string>
+
+    <!-- Auth (Login/Register) -->
+    <string name="auth_login_title">התחברות</string>
+    <string name="auth_register_title">הרשמה</string>
+    <string name="auth_email_hint">אימייל</string>
+    <string name="auth_password_hint">סיסמה</string>
+    <string name="auth_action_login">התחברי</string>
+    <string name="auth_action_register">צרי משתמש</string>
+    <string name="auth_go_to_register">אין לך משתמש? להרשמה</string>
+    <string name="auth_go_to_login">כבר יש לך משתמש? להתחברות</string>
+    <string name="auth_error_email">אימייל לא תקין</string>
+    <string name="auth_error_password">סיסמה מינימום 6 תווים</string>
+
+    <!-- Home Fragment -->
+    <string name="home_greeting">שלום %1$s 👋</string>
+    <string name="home_weather_loading">מזג אוויר...</string>
+    <string name="home_weather_error">מזג האוויר לא זמין (אין מיקום)</string>
+    <string name="home_weather_permission">כדי להציג מזג אוויר צריך הרשאת מיקום</string>
+    <string name="home_weather_location">%1$s</string>
+    <string name="home_weather_temp">%1$s°C</string>
+    <string name="home_recommended_looks">לוקים מומלצים בשבילך ❤️</string>
+    <string name="home_all_looks">כל הלוקים</string>
+
+    <!-- Profile & My Looks -->
+    <string name="profile_full_name">שם מלא</string>
+    <string name="profile_edit">עריכת פרופיל</string>
+    <string name="my_looks_title">הלוקים שלי</string>
+    <string name="my_looks_empty">אין לך לוקים עדיין</string>
+    
+    <!-- Item Look -->
+    <string name="look_title_placeholder">כותרת הלוק</string>
+    <string name="look_desc_placeholder">תיאור קצר...</string>
+
+    <!-- Look Details -->
+    <string name="details_favorites">מועדפים</string>
+    <string name="details_edit">עריכה</string>
+    <string name="details_delete">מחיקה</string>
 </resources>

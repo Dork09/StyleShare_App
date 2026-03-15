@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+מטרת הקובץ:
+Navigation Graph + SafeArgs
+-->
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/loginFragment">
+
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.example.styleshare.ui.auth.LoginFragment"
+        android:label="Login">
+
+        <action
+            android:id="@+id/action_loginFragment_to_registerFragment"
+            app:destination="@id/registerFragment" />
+
+        <action
+            android:id="@+id/action_loginFragment_to_homeFragment"
+            app:destination="@id/homeFragment"
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/registerFragment"
+        android:name="com.example.styleshare.ui.auth.RegisterFragment"
+        android:label="Register">
+
+        <action
+            android:id="@+id/action_registerFragment_to_homeFragment"
+            app:destination="@id/homeFragment"
+            app:popUpTo="@id/registerFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.example.styleshare.ui.home.HomeFragment"
+        android:label="Home">
+
+        <action
+            android:id="@+id/action_homeFragment_to_lookDetailsFragment"
+            app:destination="@id/lookDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/createLookFragment"
+        android:name="com.example.styleshare.ui.create.CreateLookFragment"
+        android:label="Create" />
+
+    <fragment
+        android:id="@+id/favoritesFragment"
+        android:name="com.example.styleshare.ui.favorites.FavoritesFragment"
+        android:label="Favorites">
+
+        <action
+            android:id="@+id/action_favoritesFragment_to_lookDetailsFragment"
+            app:destination="@id/lookDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/myLooksFragment"
+        android:name="com.example.styleshare.ui.mylooks.MyLooksFragment"
+        android:label="MyLooks">
+
+        <action
+            android:id="@+id/action_myLooksFragment_to_editLookFragment"
+            app:destination="@id/editLookFragment" />
+
+        <action
+            android:id="@+id/action_myLooksFragment_to_lookDetailsFragment"
+            app:destination="@id/lookDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.styleshare.ui.profile.ProfileFragment"
+        android:label="Profile">
+
+        <action
+            android:id="@+id/action_profileFragment_to_editProfileFragment"
+            app:destination="@id/editProfileFragment" />
+
+        <action
+            android:id="@+id/action_profileFragment_to_loginFragment"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true" />
+            
+        <action
+            android:id="@+id/action_profileFragment_to_myLooksFragment"
+            app:destination="@id/myLooksFragment" />
+            
+        <action
+            android:id="@+id/action_profileFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/editProfileFragment"
+        android:name="com.example.styleshare.ui.profile.EditProfileFragment"
+        android:label="EditProfile" />
+
+    <fragment
+        android:id="@+id/lookDetailsFragment"
+        android:name="com.example.styleshare.ui.details.LookDetailsFragment"
+        android:label="Details">
+
+        <argument
+            android:name="lookId"
+            app:argType="string" />
+
+        <action
+            android:id="@+id/action_lookDetailsFragment_to_editLookFragment"
+            app:destination="@id/editLookFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/editLookFragment"
+        android:name="com.example.styleshare.ui.mylooks.EditLookFragment"
+        android:label="EditLook">
+
+        <argument
+            android:name="lookId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.styleshare.ui.settings.SettingsFragment"
+        android:label="Settings" />
+
+</navigation>

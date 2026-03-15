@@ -1,60 +1,124 @@
+/**
+ * מטרת הקובץ:
+ * מסך יצירת לוק:
+ * - בחירת תמונה (Gallery)
+ * - שמירה ל-Room
+ */
 package com.example.styleshare.ui.create
 
+import android.net.Uri
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import com.example.styleshare.R
+import com.example.styleshare.databinding.FragmentCreateLookBinding
+import com.example.styleshare.utils.ImageStorage
+import com.example.styleshare.utils.Result
+import com.google.firebase.auth.FirebaseAuth
+import kotlin.String
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+class CreateLookFragment : Fragment(R.layout.fragment_create_look) {
 
-/**
- * A simple [Fragment] subclass.
- * Use the [CreateLookFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
-class CreateLookFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+    private var _binding: FragmentCreateLookBinding? = null
+    private val binding get() = _binding!!
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+    private val vm: CreateLookViewModel by viewModels()
+
+    private var selectedImageUri: Uri? = null
+    private var savedImagePath: String? = null
+
+    /** בוחר תמונה מהגלריה */
+    private val pickImageLauncher =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            if (uri != null) {
+                selectedImageUri = uri
+                binding.ivPreview.visibility = View.VISIBLE
+                binding.llPickerButtons.visibility = View.GONE
+                binding.ivPreview.setImageURI(uri)
+
+                // שמירה מקומית של התמונה
+                savedImagePath = ImageStorage.saveImageToInternalStorage(requireContext(), uri)
+            }
+        }
+
+    /** חיבור UI */
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        _binding = FragmentCreateLookBinding.bind(view)
+
+        binding.btnGallery.setOnClickListener {
+            pickImageLauncher.launch("image/*")
+        }
+        
+        binding.btnCamera.setOnClickListener {
+            // For now, redirect to gallery
+            pickImageLauncher.launch("image/*")
+        }
+
+        binding.btnSaveLook.setOnClickListener {
+            val title = binding.etLookTitle.text?.toString()?.trim().orEmpty()
+            val desc = binding.etLookDesc.text?.toString()?.trim().orEmpty()
+
+            if (title.isBlank()) {
+                Toast.makeText(requireContext(), "חייב כותרת", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (savedImagePath == null) {
+                Toast.makeText(requireContext(), "חייב לבחור תמונה", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val uid = FirebaseAuth.getInstance().currentUser?.uid ?: "local_user"
+
+            val rawTags = binding.etLookTags.text?.toString()?.trim().orEmpty()
+            val tags = if (rawTags.isNotBlank()) {
+                rawTags.split(",")
+                    .map { it.trim().removePrefix("#") }
+                    .filter { it.isNotBlank() }
+            } else {
+                emptyList()
+            }
+
+            vm.saveLook(
+                title = title,
+                desc = desc,
+                imagePath = savedImagePath!!,
+                createdByUid = uid,
+                tags = tags
+            )
+
+        }
+
+        vm.state.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is Result.Loading -> Toast.makeText(requireContext(), "שומר...", Toast.LENGTH_SHORT).show()
+                is Result.Success -> {
+                    Toast.makeText(requireContext(), "הלוק נשמר ✅", Toast.LENGTH_SHORT).show()
+                    clearForm()
+                }
+                is Result.Error -> Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_create_look, container, false)
+    /** מנקה שדות אחרי שמירה */
+    private fun clearForm() {
+        binding.etLookTitle.setText("")
+        binding.etLookDesc.setText("")
+        binding.etLookTags.setText("")
+        binding.ivPreview.setImageResource(android.R.drawable.ic_menu_gallery)
+        binding.ivPreview.visibility = View.GONE
+        binding.llPickerButtons.visibility = View.VISIBLE
+        selectedImageUri = null
+        savedImagePath = null
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment CreateLookFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            CreateLookFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
+    /** ניקוי Binding */
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

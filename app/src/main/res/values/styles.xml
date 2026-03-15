@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="ShapeAppearanceOverlay">
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <!-- בסיס -->
+    <style name="ShapeAppearanceOverlay.App">
+        <item name="cornerSize">12dp</item>
+    </style>
+
+    <!-- עיגול מלא -->
+    <style name="ShapeAppearanceOverlay.App.Corner">
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <!-- אותו דבר, למקרה שמישהו מפנה ל-Full -->
+    <style name="ShapeAppearanceOverlay.App.Corner.Full">
+        <item name="cornerSize">50%</item>
+    </style>
+
+</resources>

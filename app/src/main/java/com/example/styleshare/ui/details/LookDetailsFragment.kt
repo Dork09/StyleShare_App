@@ -1,60 +1,130 @@
+/**
+ * מטרת הקובץ:
+ * מסך פרטי לוק:
+ * - מציג תמונה/כותרת/תיאור
+ * - מועדפים
+ * - מעבר לעריכה (SafeArgs)
+ * - מחיקה
+ */
 package com.example.styleshare.ui.details
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import com.example.styleshare.R
+import com.example.styleshare.databinding.FragmentLookDetailsBinding
+import com.example.styleshare.utils.Result
+import com.squareup.picasso.Picasso
+import java.io.File
+import androidx.recyclerview.widget.LinearLayoutManager
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+class LookDetailsFragment : Fragment(R.layout.fragment_look_details) {
 
-/**
- * A simple [Fragment] subclass.
- * Use the [LookDetailsFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
-class LookDetailsFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+    private var _binding: FragmentLookDetailsBinding? = null
+    private val binding get() = _binding!!
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private val args: LookDetailsFragmentArgs by navArgs()
+    private val vm: LookDetailsViewModel by viewModels()
+    private lateinit var commentsAdapter: CommentsAdapter
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_look_details, container, false)
-    }
+    /** חיבור UI */
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        _binding = FragmentLookDetailsBinding.bind(view)
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment LookDetailsFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            LookDetailsFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+        vm.init(requireContext())
+
+        vm.lookState.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is Result.Loading -> binding.progress.visibility = View.VISIBLE
+                is Result.Success -> {
+                    binding.progress.visibility = View.GONE
+                    val look = state.data
+
+                    binding.tvTitle.text = look.title
+                    binding.tvDesc.text = look.description
+                    binding.tvLikesCount.text = "${look.likesCount} Likes"
+
+                    // Set Tags
+                    binding.cgTags.removeAllViews()
+                    for (tag in look.tags) {
+                        val chip = com.google.android.material.chip.Chip(requireContext())
+                        chip.text = "#$tag"
+                        chip.isClickable = false
+                        chip.isCheckable = false
+                        binding.cgTags.addView(chip)
+                    }
+
+                    val req = if (look.imagePath.startsWith("http")) {
+                        Picasso.get().load(look.imagePath)
+                    } else {
+                        Picasso.get().load(File(look.imagePath))
+                    }
+                    req.fit()
+                        .centerCrop()
+                        .into(binding.ivLook)
+
+                    binding.btnLike.text = if (look.isFavorite) "Liked" else "Like"
+                    
+                    // Permission Check: only the creator can edit/delete
+                    val currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: "local_user"
+                    if (currentUid == look.createdByUid) {
+                        binding.actionLayout.visibility = View.VISIBLE
+                    } else {
+                        binding.actionLayout.visibility = View.GONE
+                    }
+                }
+                is Result.Error -> {
+                    binding.progress.visibility = View.GONE
+                    binding.tvTitle.text = state.message
                 }
             }
+        }
+
+        // Setup Comments RecyclerView
+        commentsAdapter = CommentsAdapter()
+        binding.rvComments.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = commentsAdapter
+        }
+
+        vm.commentsState.observe(viewLifecycleOwner) { state ->
+            if (state is Result.Success) {
+                commentsAdapter.submitList(state.data)
+            }
+        }
+
+        binding.btnLike.setOnClickListener {
+            vm.toggleFavorite(args.lookId)
+        }
+
+        binding.btnSendComment.setOnClickListener {
+            val text = binding.etComment.text.toString()
+            if (text.isNotBlank()) {
+                vm.addComment(args.lookId, text)
+                binding.etComment.text.clear()
+            }
+        }
+
+        binding.btnEdit.setOnClickListener {
+            val action = LookDetailsFragmentDirections.actionLookDetailsFragmentToEditLookFragment(args.lookId)
+            findNavController().navigate(action)
+        }
+
+        binding.btnDelete.setOnClickListener {
+            vm.deleteLook(args.lookId)
+            findNavController().navigate(R.id.homeFragment)
+        }
+
+        vm.loadLook(args.lookId)
+    }
+
+    /** ניקוי */
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

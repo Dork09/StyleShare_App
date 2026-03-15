@@ -14,7 +14,7 @@ plugins {
 
 android {
     namespace = "com.example.styleshare"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.styleshare"
@@ -51,6 +51,8 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.fragment.ktx)
+    implementation(libs.material)
+
 
     // MVVM - ViewModel + LiveData
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
@@ -75,4 +77,9 @@ dependencies {
 
     // אם אתן משתמשות מיקום/התראות לפי מיקום (אופציונלי)
     implementation(libs.play.services.location)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    implementation(libs.okhttp.logging)
+    implementation(libs.picasso)
+
 }
