@@ -7,6 +7,7 @@
 package com.example.styleshare
 
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
@@ -41,10 +42,12 @@ class MainActivity : AppCompatActivity() {
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
                 R.id.loginFragment, R.id.registerFragment -> {
-                    binding.bottomNav.visibility = android.view.View.GONE
+                    binding.bottomNav.visibility = View.GONE
+                    binding.fabAddLook.visibility = View.GONE
                 }
                 else -> {
-                    binding.bottomNav.visibility = android.view.View.VISIBLE
+                    binding.bottomNav.visibility = View.VISIBLE
+                    binding.fabAddLook.visibility = View.VISIBLE
                 }
             }
         }
