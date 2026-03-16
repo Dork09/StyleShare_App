@@ -5,6 +5,7 @@ data class Look(
     val title: String,
     val description: String,
     val imagePath: String,
+    val authorName: String,
     val isFavorite: Boolean,
     val createdAt: Long,
     val createdByUid: String,

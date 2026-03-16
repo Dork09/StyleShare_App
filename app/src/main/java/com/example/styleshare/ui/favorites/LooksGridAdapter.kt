@@ -25,10 +25,7 @@ class LooksGridAdapter(
         val look = items[position]
 
         holder.binding.tvTitle.text = look.title
-        
-        // Fetch real username instead of hardcoding, but we'll try to find authorName if present.
-        // Look model has createdByUid. In a real app we'd fetch the user's name. For now let's show "User".
-        holder.binding.tvUserName.text = "User" // Or fetch from somewhere
+        holder.binding.tvUserName.text = look.authorName
 
         val req = if (look.imagePath.startsWith("http")) {
             Picasso.get().load(look.imagePath)
