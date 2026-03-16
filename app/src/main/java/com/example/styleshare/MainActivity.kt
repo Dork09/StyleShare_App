@@ -23,6 +23,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("he"))
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
