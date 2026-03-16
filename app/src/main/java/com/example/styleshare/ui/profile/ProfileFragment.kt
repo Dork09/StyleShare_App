@@ -32,6 +32,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentProfileBinding.bind(view)
+        binding.btnSettings.visibility = View.GONE
 
         vm.state.observe(viewLifecycleOwner) { state ->
             when (state) {
@@ -89,10 +90,6 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             findNavController().navigate(R.id.action_profileFragment_to_myLooksFragment)
         }
         
-        binding.btnSettings.setOnClickListener {
-            findNavController().navigate(R.id.action_profileFragment_to_settingsFragment)
-        }
-
         binding.btnLogout.setOnClickListener {
             vm.logout()
 

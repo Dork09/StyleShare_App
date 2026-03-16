@@ -28,6 +28,7 @@ class FavoritesFragment : Fragment(R.layout.fragment_favorites) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentFavoritesBinding.bind(view)
+        binding.cvTabs.visibility = View.GONE
 
         vm.init(requireContext())
 
