@@ -61,7 +61,7 @@ class LookDetailsViewModel : ViewModel() {
         }
     }
 
-    fun addComment(lookId: String, text: String, authorName: String = "Guest User") {
+    fun addComment(lookId: String, text: String, authorName: String? = null) {
         viewModelScope.launch {
             try {
                 looksRepo?.addComment(lookId, text, authorName)

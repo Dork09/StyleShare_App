@@ -136,12 +136,13 @@ class LooksRepository(context: Context) {
         }
     }
 
-    suspend fun addComment(lookId: String, text: String, authorName: String) {
+    suspend fun addComment(lookId: String, text: String, authorName: String? = null) {
+        val resolvedAuthorName = authorName?.trim().takeUnless { it.isNullOrEmpty() } ?: resolveCurrentUserName()
         val commentEntity = com.example.styleshare.data.local.entity.CommentEntity(
             id = UUID.randomUUID().toString(),
             lookId = lookId,
             text = text,
-            authorName = authorName,
+            authorName = resolvedAuthorName,
             createdAt = System.currentTimeMillis()
         )
         commentDao.insertComment(commentEntity)
@@ -190,5 +191,10 @@ class LooksRepository(context: Context) {
         }
 
         return "User"
+    }
+
+    private suspend fun resolveCurrentUserName(): String {
+        val currentUser = FirebaseAuth.getInstance().currentUser ?: return "Guest User"
+        return resolveAuthorName(currentUser.uid)
     }
 }
