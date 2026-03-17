@@ -42,7 +42,7 @@ class LooksAdapter(
         }
         
         req.fit()
-            .centerCrop()
+            .centerInside()
             .into(holder.binding.ivLook)
 
         // ✅ MaterialButton -> IconButton. Change icon tint based on isFavorite

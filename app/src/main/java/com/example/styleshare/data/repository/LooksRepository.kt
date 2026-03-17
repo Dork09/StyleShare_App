@@ -47,7 +47,10 @@ class LooksRepository(context: Context) {
         description: String,
         imagePath: String,
         createdByUid: String,
-        tags: List<String> = emptyList()
+        tags: List<String> = emptyList(),
+        likesCount: Int = 0,
+        commentsCount: Int = 0,
+        createdAt: Long = System.currentTimeMillis()
     ): String {
         val newId = UUID.randomUUID().toString()
         val entity = LookEntity(
@@ -56,11 +59,11 @@ class LooksRepository(context: Context) {
             description = description,
             imagePath = imagePath,
             favoritedBy = emptyList(),
-            createdAt = System.currentTimeMillis(),
+            createdAt = createdAt,
             createdByUid = createdByUid,
             tags = tags,
-            likesCount = 0,
-            commentsCount = 0
+            likesCount = likesCount,
+            commentsCount = commentsCount
         )
 
         dao.upsert(entity)

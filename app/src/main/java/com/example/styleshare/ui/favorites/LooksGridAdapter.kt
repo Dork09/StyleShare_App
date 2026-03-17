@@ -34,7 +34,7 @@ class LooksGridAdapter(
         }
         
         req.fit()
-            .centerCrop()
+            .centerInside()
             .into(holder.binding.ivLook)
 
         if (look.isFavorite) {
