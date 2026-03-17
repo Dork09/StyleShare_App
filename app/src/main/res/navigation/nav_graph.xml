@@ -94,9 +94,6 @@ Navigation Graph + SafeArgs
             android:id="@+id/action_profileFragment_to_myLooksFragment"
             app:destination="@id/myLooksFragment" />
             
-        <action
-            android:id="@+id/action_profileFragment_to_settingsFragment"
-            app:destination="@id/settingsFragment" />
     </fragment>
 
     <fragment
@@ -127,10 +124,5 @@ Navigation Graph + SafeArgs
             android:name="lookId"
             app:argType="string" />
     </fragment>
-
-    <fragment
-        android:id="@+id/settingsFragment"
-        android:name="com.example.styleshare.ui.settings.SettingsFragment"
-        android:label="Settings" />
 
 </navigation>

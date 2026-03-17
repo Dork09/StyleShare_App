@@ -33,6 +33,7 @@ class LooksAdapter(
 
         holder.binding.tvTitle.text = look.title
         holder.binding.tvDesc.text = look.description
+        holder.binding.tvUserName.text = look.authorName
 
         val req = if (look.imagePath.startsWith("http")) {
             Picasso.get().load(look.imagePath)

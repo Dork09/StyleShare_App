@@ -13,6 +13,7 @@ import android.content.Context
 import com.example.styleshare.data.local.db.AppDatabase
 import com.example.styleshare.data.local.entity.LookEntity
 import com.example.styleshare.model.Look
+import com.google.firebase.auth.FirebaseAuth
 import java.util.UUID
 import kotlin.String
 import kotlin.collections.List
@@ -21,15 +22,16 @@ class LooksRepository(context: Context) {
 
     private val dao = AppDatabase.getInstance(context).lookDao()
     private val commentDao = AppDatabase.getInstance(context).commentDao()
+    private val userDao = AppDatabase.getInstance(context).userDao()
 
     /** מחזיר את הפיד */
     suspend fun getFeed(currentUid: String): List<Look> {
-        return dao.getAllLooks().map { it.toModel(currentUid) }
+        return dao.getAllLooks().mapToLooks(currentUid)
     }
 
     /** מחזיר מועדפים */
     suspend fun getFavorites(currentUid: String): List<Look> {
-        return dao.getFavorites(currentUid).map { it.toModel(currentUid) }
+        return dao.getFavorites(currentUid).mapToLooks(currentUid)
     }
 
     /** מביא לוק לפי id */
@@ -117,7 +119,7 @@ class LooksRepository(context: Context) {
     
     /** מחזיר רק את הלוקים של משתמש מסוים (MyLooks) */
     suspend fun getMyLooks(uid: String): List<Look> {
-        return dao.getLooksByUser(uid).map { it.toModel(uid) }
+        return dao.getLooksByUser(uid).mapToLooks(uid)
     }
 
     // --- COMMESTS ---
@@ -151,12 +153,21 @@ class LooksRepository(context: Context) {
         }
     }
 
+    private suspend fun List<LookEntity>.mapToLooks(currentUid: String): List<Look> {
+        val looks = ArrayList<Look>(size)
+        for (entity in this) {
+            looks += entity.toModel(currentUid)
+        }
+        return looks
+    }
+
     /** המרה Entity -> Model */
-    private fun LookEntity.toModel(currentUid: String): Look = Look(
+    private suspend fun LookEntity.toModel(currentUid: String): Look = Look(
         id = id,
         title = title,
         description = description,
         imagePath = imagePath,
+        authorName = resolveAuthorName(createdByUid),
         isFavorite = favoritedBy.contains(currentUid),
         createdAt = createdAt,
         createdByUid = createdByUid,
@@ -164,4 +175,20 @@ class LooksRepository(context: Context) {
         likesCount = likesCount,
         commentsCount = commentsCount
     )
+
+    private suspend fun resolveAuthorName(authorUid: String): String {
+        val storedName = userDao.getByUid(authorUid)?.fullName?.trim().orEmpty()
+        if (storedName.isNotBlank()) return storedName
+
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser?.uid == authorUid) {
+            val displayName = currentUser.displayName?.trim().orEmpty()
+            if (displayName.isNotBlank()) return displayName
+
+            val emailPrefix = currentUser.email?.substringBefore("@").orEmpty()
+            if (emailPrefix.isNotBlank()) return emailPrefix
+        }
+
+        return "User"
+    }
 }
