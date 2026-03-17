@@ -19,6 +19,6 @@ class HomeRepository(context: Context) {
 
     suspend fun incrementLike(lookId: String) = looksRepo.incrementLike(lookId)
 
-    suspend fun getTemperature(lat: Double, lon: Double): Double =
-        weatherRepo.getTemperature(lat, lon)
+    suspend fun getCurrentWeather(lat: Double, lon: Double): HomeWeather =
+        weatherRepo.getCurrentWeather(lat, lon)
 }

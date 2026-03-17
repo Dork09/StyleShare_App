@@ -1,17 +1,13 @@
-/**
- * מטרת הקובץ:
- * Repository למזג אוויר דרך REST API (Retrofit).
- */
 package com.example.styleshare.data.repository
 
 import com.example.styleshare.data.remote.api.WeatherRemoteDataSource
+import com.example.styleshare.ui.home.HomeWeather
 
 class WeatherRepository(
     private val remote: WeatherRemoteDataSource = WeatherRemoteDataSource()
 ) {
 
-    /** מחזיר טמפרטורה לפי מיקום */
-    suspend fun getTemperature(lat: Double, lon: Double): Double {
-        return remote.getTemperature(lat, lon)
+    suspend fun getCurrentWeather(lat: Double, lon: Double): HomeWeather {
+        return remote.getCurrentWeather(lat, lon)
     }
 }
