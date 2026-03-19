@@ -14,6 +14,8 @@ interface WeatherApiService {
     suspend fun getWeather(
         @Query("latitude") lat: Double,
         @Query("longitude") lon: Double,
-        @Query("current_weather") currentWeather: Boolean = true
+        @Query("current") current: String = "temperature_2m,weather_code",
+        @Query("timezone") timezone: String = "auto",
+        @Query("forecast_days") forecastDays: Int = 1
     ): WeatherResponse
 }

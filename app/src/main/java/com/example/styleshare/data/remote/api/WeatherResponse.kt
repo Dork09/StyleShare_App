@@ -1,10 +1,10 @@
 package com.example.styleshare.data.remote.api
 
 data class WeatherResponse(
-    val current_weather: CurrentWeather
+    val current: CurrentWeather
 )
 
 data class CurrentWeather(
-    val temperature: Double,
-    val weathercode: Int
+    val temperature_2m: Double,
+    val weather_code: Int
 )

@@ -15,10 +15,10 @@ class WeatherRemoteDataSource {
 
     suspend fun getCurrentWeather(lat: Double, lon: Double): HomeWeather {
         val response = api.getWeather(lat = lat, lon = lon)
-        val current = response.current_weather
+        val current = response.current
         return HomeWeather(
-            temperatureCelsius = current.temperature,
-            conditionLabel = weatherCodeToCondition(current.weathercode)
+            temperatureCelsius = current.temperature_2m,
+            conditionLabel = weatherCodeToCondition(current.weather_code)
         )
     }
 

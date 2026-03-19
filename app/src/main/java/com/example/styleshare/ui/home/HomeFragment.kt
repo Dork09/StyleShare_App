@@ -1,18 +1,11 @@
-/**
- * מטרת הקובץ:
- * HomeFragment:
- * - מציג שלום לפי המשתמש (Greeting)
- * - מציג מזג אוויר לפי מיקום + שם עיר
- * - מציג "לוקים מומלצים" (RecyclerView אופקי)
- * - מציג "כל הלוקים" (RecyclerView אנכי)
- * - ניווט לפרטי לוק באמצעות SafeArgs
- * - שינוי מועדפים
- */
 package com.example.styleshare.ui.home
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.location.Address
 import android.location.Geocoder
+import android.location.Location
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.core.app.ActivityCompat
@@ -23,10 +16,20 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.styleshare.R
 import com.example.styleshare.databinding.FragmentHomeBinding
 import com.example.styleshare.utils.Result
+import com.google.android.gms.location.CurrentLocationRequest
+import com.google.android.gms.location.Granularity
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import java.util.Locale
 
 class HomeFragment : Fragment(R.layout.fragment_home) {
+
+    private data class ResolvedWeatherLocation(
+        val latitude: Double,
+        val longitude: Double,
+        val cityName: String
+    )
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
@@ -36,17 +39,14 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private lateinit var adapterAllLooks: LooksAdapter
     private lateinit var adapterRecommended: LooksAdapter
 
-    /** חיבור UI + Adapters + Observers */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentHomeBinding.bind(view)
 
-        // ✅ Adapter לחלוטין כל הלוקים
         adapterAllLooks = LooksAdapter(
             items = emptyList(),
             onItemClick = { look ->
-                val action =
-                    HomeFragmentDirections.actionHomeFragmentToLookDetailsFragment(look.id)
+                val action = HomeFragmentDirections.actionHomeFragmentToLookDetailsFragment(look.id)
                 findNavController().navigate(action)
             },
             onFavClick = { look ->
@@ -54,12 +54,10 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             }
         )
 
-        // ✅ Adapter ללוקים מומלצים
         adapterRecommended = LooksAdapter(
             items = emptyList(),
             onItemClick = { look ->
-                val action =
-                    HomeFragmentDirections.actionHomeFragmentToLookDetailsFragment(look.id)
+                val action = HomeFragmentDirections.actionHomeFragmentToLookDetailsFragment(look.id)
                 findNavController().navigate(action)
             },
             onFavClick = { look ->
@@ -67,30 +65,26 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             }
         )
 
-        // ✅ RecyclerView - מומלצים (אופקי)
         binding.rvRecommended.layoutManager =
             LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
         binding.rvRecommended.adapter = adapterRecommended
 
-        // ✅ RecyclerView - כל הלוקים (אנכי)
         binding.rvLooks.layoutManager = LinearLayoutManager(requireContext())
         binding.rvLooks.adapter = adapterAllLooks
 
-        // ✅ Greeting (שלום)
         vm.greeting.observe(viewLifecycleOwner) { text ->
             binding.tvHello.text = text
         }
 
-        // ✅ מזג אוויר
         vm.weatherLocation.observe(viewLifecycleOwner) { text ->
             binding.tvLocation.text = text
         }
+
         vm.weatherTemp.observe(viewLifecycleOwner) { text ->
             binding.tvTemperature.text = text
             binding.tvTemperature.visibility = if (text.isBlank()) View.GONE else View.VISIBLE
         }
 
-        // ✅ פיד - כל הלוקים
         vm.feedState.observe(viewLifecycleOwner) { state ->
             when (state) {
                 is Result.Loading -> binding.progress.visibility = View.VISIBLE
@@ -98,31 +92,24 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                     binding.progress.visibility = View.GONE
                     adapterAllLooks.submitList(state.data)
                 }
+
                 is Result.Error -> {
                     binding.progress.visibility = View.GONE
                 }
             }
         }
 
-        // ✅ מומלצים (אם יש לך recommended ב-ViewModel)
         vm.recommended.observe(viewLifecycleOwner) { list ->
             adapterRecommended.submitList(list)
         }
 
-        // ✅ טעינת מידע למסך
         vm.loadFeed()
         loadWeatherByLocation()
     }
 
-    /**
-     * מטרת הפונקציה:
-     * מביאה מיקום מהטלפון (אם יש הרשאה)
-     * ומבקשת מה-ViewModel להביא מזג אוויר לפי Lat/Lon
-     */
     private fun loadWeatherByLocation() {
         val fused = LocationServices.getFusedLocationProviderClient(requireActivity())
 
-        // אם אין הרשאה -> לבקש הרשאה
         if (ActivityCompat.checkSelfPermission(
                 requireContext(),
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -132,27 +119,50 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             return
         }
 
-        // יש הרשאה -> להביא מיקום אחרון
-        // --- Added: Changed lastLocation (often null) to getCurrentLocation to actively fetch coordinates ---
-        fused.getCurrentLocation(com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY, null).addOnSuccessListener { location ->
-            if (location != null) {
-                val city = getCityName(location.latitude, location.longitude)
-                vm.loadWeather(location.latitude, location.longitude, city)
-            } else {
+        val request = CurrentLocationRequest.Builder()
+            .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+            .setGranularity(Granularity.GRANULARITY_FINE)
+            .setMaxUpdateAgeMillis(0)
+            .setDurationMillis(10_000)
+            .build()
+
+        val cancellationTokenSource = CancellationTokenSource()
+
+        fused.getCurrentLocation(request, cancellationTokenSource.token)
+            .addOnSuccessListener { location ->
+                if (location != null) {
+                    bindWeatherLocation(location)
+                } else {
+                    fused.lastLocation
+                        .addOnSuccessListener { lastLocation ->
+                            if (lastLocation != null) {
+                                bindWeatherLocation(lastLocation)
+                            } else {
+                                binding.tvLocation.text = getString(R.string.home_weather_error)
+                                binding.tvTemperature.visibility = View.GONE
+                            }
+                        }
+                        .addOnFailureListener {
+                            binding.tvLocation.text = getString(R.string.home_weather_error)
+                            binding.tvTemperature.visibility = View.GONE
+                        }
+                }
+            }
+            .addOnFailureListener {
                 binding.tvLocation.text = getString(R.string.home_weather_error)
                 binding.tvTemperature.visibility = View.GONE
             }
-        }.addOnFailureListener { e ->
-            // --- Added: Explicitly catch failures in location retrieval ---
-            binding.tvLocation.text = getString(R.string.home_weather_error)
-            binding.tvTemperature.visibility = View.GONE
-        }
     }
 
-    /**
-     * מטרת הפונקציה:
-     * תופסת את התשובה של המשתמש אם אישר/דחה הרשאת מיקום
-     */
+    private fun bindWeatherLocation(location: Location) {
+        val resolvedLocation = resolveWeatherLocation(location)
+        vm.loadWeather(
+            resolvedLocation.latitude,
+            resolvedLocation.longitude,
+            resolvedLocation.cityName
+        )
+    }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -171,28 +181,55 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         }
     }
 
-    /**
-     * מטרת הפונקציה:
-     * מחזירה שם עיר (כמו "ראשון לציון") לפי Lat/Lon באמצעות Geocoder
-     */
     private fun getCityName(lat: Double, lon: Double): String {
         return try {
             val geocoder = Geocoder(requireContext(), Locale("iw", "IL"))
             val list = geocoder.getFromLocation(lat, lon, 1)
-            val locality = list?.firstOrNull()?.locality
-            
-            if (locality?.contains("Mountain View", ignoreCase = true) == true || 
-                locality?.contains("מאונטיין", ignoreCase = true) == true) {
-                return "תל אביב"
-            }
-            
-            locality ?: "המיקום שלך"
+            resolveBestCityName(list?.firstOrNull())
         } catch (e: Exception) {
             "המיקום שלך"
         }
     }
 
-    /** ניקוי Binding כדי למנוע Memory Leak */
+    private fun resolveBestCityName(address: Address?): String {
+        return address?.locality
+            ?.takeIf { it.isNotBlank() }
+            ?: address?.subAdminArea?.takeIf { it.isNotBlank() }
+            ?: address?.adminArea?.takeIf { it.isNotBlank() }
+            ?: address?.countryName?.takeIf { it.isNotBlank() }
+            ?: "המיקום שלך"
+    }
+
+    private fun resolveWeatherLocation(location: Location): ResolvedWeatherLocation {
+        val cityName = getCityName(location.latitude, location.longitude)
+        val shouldUseTelAvivFallback = isLikelyEmulator() && (
+            cityName.contains("Mountain View", ignoreCase = true) || location.isMock
+        )
+
+        return if (shouldUseTelAvivFallback) {
+            ResolvedWeatherLocation(
+                latitude = 32.0853,
+                longitude = 34.7818,
+                cityName = "תל אביב"
+            )
+        } else {
+            ResolvedWeatherLocation(
+                latitude = location.latitude,
+                longitude = location.longitude,
+                cityName = cityName
+            )
+        }
+    }
+
+    private fun isLikelyEmulator(): Boolean {
+        return Build.FINGERPRINT.startsWith("generic") ||
+            Build.FINGERPRINT.contains("emulator", ignoreCase = true) ||
+            Build.MODEL.contains("Emulator", ignoreCase = true) ||
+            Build.MODEL.contains("Android SDK built for", ignoreCase = true) ||
+            Build.MANUFACTURER.contains("Genymotion", ignoreCase = true) ||
+            Build.PRODUCT.contains("sdk", ignoreCase = true)
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

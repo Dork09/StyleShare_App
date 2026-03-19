@@ -55,12 +55,23 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
 
     fun loadFeed() {
         viewModelScope.launch {
-            _feedState.value = Result.Loading
             try {
                 val uid = FirebaseAuth.getInstance().currentUser?.uid ?: "guest"
-                val looks = repo.getFeed(uid)
-                _feedState.value = Result.Success(looks)
-                updateRecommendations(looks)
+                if (_feedState.value !is Result.Success) {
+                    _feedState.value = Result.Loading
+                }
+
+                val localLooks = repo.getFeed(uid)
+                _feedState.value = Result.Success(localLooks)
+                updateRecommendations(localLooks)
+
+                repo.refreshFeedFromRemote()
+
+                val refreshedLooks = repo.getFeed(uid)
+                if (refreshedLooks != localLooks) {
+                    _feedState.value = Result.Success(refreshedLooks)
+                    updateRecommendations(refreshedLooks)
+                }
             } catch (e: Exception) {
                 _feedState.value = Result.Error(e.message ?: "Failed loading feed")
             }
@@ -71,14 +82,19 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             val uid = FirebaseAuth.getInstance().currentUser?.uid ?: "guest"
             repo.toggleFavorite(lookId, uid)
-            loadFeed()
+            val updatedLooks = repo.getFeed(uid)
+            _feedState.value = Result.Success(updatedLooks)
+            updateRecommendations(updatedLooks)
         }
     }
 
     fun incrementLike(lookId: String) {
         viewModelScope.launch {
+            val uid = FirebaseAuth.getInstance().currentUser?.uid ?: "guest"
             repo.incrementLike(lookId)
-            loadFeed()
+            val updatedLooks = repo.getFeed(uid)
+            _feedState.value = Result.Success(updatedLooks)
+            updateRecommendations(updatedLooks)
         }
     }
 

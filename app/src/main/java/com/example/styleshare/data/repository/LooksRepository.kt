@@ -35,19 +35,16 @@ class LooksRepository(context: Context) {
 
     /** מחזיר את הפיד */
     suspend fun getFeed(currentUid: String): List<Look> {
-        syncRemoteLooksToLocal()
         return dao.getAllLooks().mapToLooks(currentUid)
     }
 
     /** מחזיר מועדפים */
     suspend fun getFavorites(currentUid: String): List<Look> {
-        syncRemoteLooksToLocal()
         return dao.getFavorites(currentUid).mapToLooks(currentUid)
     }
 
     /** מביא לוק לפי id */
     suspend fun getLookById(lookId: String, currentUid: String): Look? {
-        syncRemoteLooksToLocal()
         return dao.getById(lookId)?.toModel(currentUid)
     }
 
@@ -144,8 +141,14 @@ class LooksRepository(context: Context) {
     
     /** מחזיר רק את הלוקים של משתמש מסוים (MyLooks) */
     suspend fun getMyLooks(uid: String): List<Look> {
-        syncRemoteLooksToLocal()
         return dao.getLooksByUser(uid).mapToLooks(uid)
+    }
+
+    suspend fun refreshLooksFromRemote(force: Boolean = false) {
+        val now = System.currentTimeMillis()
+        if (!force && now - lastRemoteSyncAt < REMOTE_SYNC_TTL_MS) return
+        syncRemoteLooksToLocal()
+        lastRemoteSyncAt = System.currentTimeMillis()
     }
 
     // --- COMMESTS ---
@@ -309,5 +312,10 @@ class LooksRepository(context: Context) {
             likesCount = likesCount,
             commentsCount = commentsCount
         )
+    }
+
+    private companion object {
+        private var lastRemoteSyncAt: Long = 0L
+        private const val REMOTE_SYNC_TTL_MS = 60_000L
     }
 }

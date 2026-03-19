@@ -1,12 +1,9 @@
-/**
- * מטרת הקובץ:
- * Adapter ל-RecyclerView שמציג כרטיס לוק יפה.
- */
 package com.example.styleshare.ui.home
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.example.styleshare.R
 import com.example.styleshare.databinding.ItemLookBinding
 import com.example.styleshare.model.Look
 import com.squareup.picasso.Picasso
@@ -18,16 +15,13 @@ class LooksAdapter(
     private val onFavClick: (Look) -> Unit
 ) : RecyclerView.Adapter<LooksAdapter.LookVH>() {
 
-    /** ViewHolder עם ViewBinding */
     inner class LookVH(val binding: ItemLookBinding) : RecyclerView.ViewHolder(binding.root)
 
-    /** יצירת שורה */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LookVH {
         val binding = ItemLookBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return LookVH(binding)
     }
 
-    /** קישור נתונים לשורה */
     override fun onBindViewHolder(holder: LookVH, position: Int) {
         val look = items[position]
 
@@ -40,22 +34,15 @@ class LooksAdapter(
         } else {
             Picasso.get().load(File(look.imagePath))
         }
-        
+
         req.fit()
             .centerInside()
             .into(holder.binding.ivLook)
 
-        // ✅ MaterialButton -> IconButton. Change icon tint based on isFavorite
-        if (look.isFavorite) {
-            holder.binding.btnLike.setColorFilter(holder.itemView.context.getColor(com.example.styleshare.R.color.pink_gradient_start))
-        } else {
-            holder.binding.btnLike.setColorFilter(holder.itemView.context.getColor(com.example.styleshare.R.color.text_primary))
-        }
-        
+        applyFavoriteTint(holder.binding, look.isFavorite)
         holder.binding.tvCommentsCount.text = "${look.commentsCount} Comments"
         holder.binding.tvLikesCount.text = "${look.likesCount} Likes"
 
-        // Tags
         holder.binding.cgTags.removeAllViews()
         for (tag in look.tags) {
             val chip = com.google.android.material.chip.Chip(holder.itemView.context)
@@ -66,15 +53,32 @@ class LooksAdapter(
         }
 
         holder.binding.cardLook.setOnClickListener { onItemClick(look) }
-        holder.binding.btnLike.setOnClickListener { onFavClick(look) }
+        holder.binding.btnLike.setOnClickListener {
+            val toggledLook = look.copy(
+                isFavorite = !look.isFavorite,
+                likesCount = if (look.isFavorite) {
+                    maxOf(0, look.likesCount - 1)
+                } else {
+                    look.likesCount + 1
+                }
+            )
+            val updatedItems = items.toMutableList()
+            updatedItems[position] = toggledLook
+            items = updatedItems
+            notifyItemChanged(position)
+            onFavClick(look)
+        }
     }
 
-    /** כמות פריטים */
     override fun getItemCount(): Int = items.size
 
-    /** עדכון רשימה */
     fun submitList(newItems: List<Look>) {
         items = newItems
         notifyDataSetChanged()
+    }
+
+    private fun applyFavoriteTint(binding: ItemLookBinding, isFavorite: Boolean) {
+        val colorRes = if (isFavorite) R.color.pink_gradient_start else R.color.text_primary
+        binding.btnLike.setColorFilter(binding.root.context.getColor(colorRes))
     }
 }

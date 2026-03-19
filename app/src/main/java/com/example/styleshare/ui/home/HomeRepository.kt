@@ -14,6 +14,10 @@ class HomeRepository(context: Context) {
         return looksRepo.getFeed(currentUid)
     }
 
+    suspend fun refreshFeedFromRemote(force: Boolean = false) {
+        looksRepo.refreshLooksFromRemote(force)
+    }
+
     suspend fun toggleFavorite(lookId: String, currentUid: String) =
         looksRepo.toggleFavorite(lookId, currentUid)
 
