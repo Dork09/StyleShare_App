@@ -12,9 +12,16 @@ package com.example.styleshare.data.repository
 import android.content.Context
 import com.example.styleshare.data.local.db.AppDatabase
 import com.example.styleshare.data.local.entity.LookEntity
+import com.example.styleshare.data.local.entity.UserEntity
+import com.example.styleshare.data.remote.firebase.LookImagesRemoteDataSource
+import com.example.styleshare.data.remote.firebase.LookRemoteDto
+import com.example.styleshare.data.remote.firebase.LooksRemoteDataSource
 import com.example.styleshare.model.Look
 import com.google.firebase.auth.FirebaseAuth
 import java.util.UUID
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.String
 import kotlin.collections.List
 
@@ -23,19 +30,24 @@ class LooksRepository(context: Context) {
     private val dao = AppDatabase.getInstance(context).lookDao()
     private val commentDao = AppDatabase.getInstance(context).commentDao()
     private val userDao = AppDatabase.getInstance(context).userDao()
+    private val remote = LooksRemoteDataSource()
+    private val remoteImages = LookImagesRemoteDataSource()
 
     /** מחזיר את הפיד */
     suspend fun getFeed(currentUid: String): List<Look> {
+        syncRemoteLooksToLocal()
         return dao.getAllLooks().mapToLooks(currentUid)
     }
 
     /** מחזיר מועדפים */
     suspend fun getFavorites(currentUid: String): List<Look> {
+        syncRemoteLooksToLocal()
         return dao.getFavorites(currentUid).mapToLooks(currentUid)
     }
 
     /** מביא לוק לפי id */
     suspend fun getLookById(lookId: String, currentUid: String): Look? {
+        syncRemoteLooksToLocal()
         return dao.getById(lookId)?.toModel(currentUid)
     }
 
@@ -52,22 +64,26 @@ class LooksRepository(context: Context) {
         commentsCount: Int = 0,
         createdAt: Long = System.currentTimeMillis()
     ): String {
-        val newId = UUID.randomUUID().toString()
-        val entity = LookEntity(
-            id = newId,
-            title = title,
-            description = description,
-            imagePath = imagePath,
-            favoritedBy = emptyList(),
-            createdAt = createdAt,
-            createdByUid = createdByUid,
-            tags = tags,
-            likesCount = likesCount,
-            commentsCount = commentsCount
-        )
+        return withContext(Dispatchers.IO) {
+            val newId = UUID.randomUUID().toString()
+            val resolvedImagePath = resolveRemoteImagePath(imagePath, createdByUid)
+            val entity = LookEntity(
+                id = newId,
+                title = title,
+                description = description,
+                imagePath = resolvedImagePath,
+                favoritedBy = emptyList(),
+                createdAt = createdAt,
+                createdByUid = createdByUid,
+                tags = tags,
+                likesCount = likesCount,
+                commentsCount = commentsCount
+            )
 
-        dao.upsert(entity)
-        return newId
+            dao.upsert(entity)
+            syncLookToRemote(entity)
+            newId
+        }
     }
 
     /**
@@ -87,11 +103,12 @@ class LooksRepository(context: Context) {
         val updated = current.copy(
             title = title,
             description = description,
-            imagePath = imagePath,
+            imagePath = resolveRemoteImagePath(imagePath, current.createdByUid),
             tags = tags ?: current.tags // ✅ לא מוחק תגיות אם לא שלחת
         )
 
         dao.upsert(look = updated)
+        syncLookToRemote(updated)
     }
 
     /** משנה מועדפים וכמות לייקים בהתאמה */
@@ -106,22 +123,28 @@ class LooksRepository(context: Context) {
         }
         
         val newLikesCount = if (!isCurrentlyFavorited) current.likesCount + 1 else maxOf(0, current.likesCount - 1)
-        dao.upsert(current.copy(favoritedBy = newFavoritedBy, likesCount = newLikesCount))
+        val updated = current.copy(favoritedBy = newFavoritedBy, likesCount = newLikesCount)
+        dao.upsert(updated)
+        syncLookToRemote(updated)
     }
 
     /** משנה לייקים (הדגמה - כרגע רק מגדיל/מקטין) */
     suspend fun incrementLike(lookId: String) {
         val current = dao.getById(lookId) ?: return
-        dao.upsert(current.copy(likesCount = current.likesCount + 1))
+        val updated = current.copy(likesCount = current.likesCount + 1)
+        dao.upsert(updated)
+        syncLookToRemote(updated)
     }
 
     /** מוחק לוק */
     suspend fun deleteLook(lookId: String) {
         dao.deleteById(lookId)
+        runCatching { remote.deleteLook(lookId) }
     }
     
     /** מחזיר רק את הלוקים של משתמש מסוים (MyLooks) */
     suspend fun getMyLooks(uid: String): List<Look> {
+        syncRemoteLooksToLocal()
         return dao.getLooksByUser(uid).mapToLooks(uid)
     }
 
@@ -153,7 +176,9 @@ class LooksRepository(context: Context) {
         // Update comment count on Look
         val currentLook = dao.getById(lookId)
         if (currentLook != null) {
-            dao.upsert(currentLook.copy(commentsCount = currentLook.commentsCount + 1))
+            val updated = currentLook.copy(commentsCount = currentLook.commentsCount + 1)
+            dao.upsert(updated)
+            syncLookToRemote(updated)
         }
     }
 
@@ -199,5 +224,90 @@ class LooksRepository(context: Context) {
     private suspend fun resolveCurrentUserName(): String {
         val currentUser = FirebaseAuth.getInstance().currentUser ?: return "Guest User"
         return resolveAuthorName(currentUser.uid)
+    }
+
+    private suspend fun syncRemoteLooksToLocal() {
+        val remoteLooks = runCatching { remote.getAllLooks() }.getOrNull() ?: return
+        val localLooks = dao.getAllLooks()
+
+        if (remoteLooks.isEmpty()) {
+            if (localLooks.isNotEmpty()) {
+                localLooks.forEach { localLook ->
+                    syncLookToRemote(localLook)
+                }
+            }
+            return
+        }
+
+        dao.upsertAll(remoteLooks.map { it.toEntity() })
+        dao.deleteAllExcept(remoteLooks.map { it.id })
+
+        remoteLooks.forEach { remoteLook ->
+            if (remoteLook.createdByUid.isNotBlank() && remoteLook.authorName.isNotBlank()) {
+                userDao.upsert(
+                    UserEntity(
+                        uid = remoteLook.createdByUid,
+                        fullName = remoteLook.authorName,
+                        bio = "",
+                        imagePath = null
+                    )
+                )
+            }
+        }
+    }
+
+    private suspend fun syncLookToRemote(look: LookEntity) {
+        val authorName = resolveAuthorName(look.createdByUid)
+        val remoteImagePath = resolveRemoteImagePath(look.imagePath, look.createdByUid)
+        val remoteLook = LookRemoteDto(
+            id = look.id,
+            title = look.title,
+            description = look.description,
+            imagePath = remoteImagePath,
+            createdAt = look.createdAt,
+            createdByUid = look.createdByUid,
+            authorName = authorName,
+            tags = look.tags,
+            likesCount = look.likesCount,
+            commentsCount = look.commentsCount,
+            favoritedBy = look.favoritedBy
+        )
+
+        runCatching {
+            withTimeoutOrNull(8_000L) {
+                remote.upsertLook(remoteLook)
+            }
+        }
+
+        if (remoteImagePath != look.imagePath && remoteImagePath.startsWith("http")) {
+            dao.upsert(look.copy(imagePath = remoteImagePath))
+        }
+    }
+
+    private suspend fun resolveRemoteImagePath(imagePath: String, createdByUid: String): String {
+        if (imagePath.startsWith("http")) return imagePath
+        return runCatching {
+            withTimeoutOrNull(8_000L) {
+                remoteImages.uploadLookImage(
+                    localImagePath = imagePath,
+                    userUid = createdByUid
+                )
+            } ?: imagePath
+        }.getOrDefault(imagePath)
+    }
+
+    private fun LookRemoteDto.toEntity(): LookEntity {
+        return LookEntity(
+            id = id,
+            title = title,
+            description = description,
+            imagePath = imagePath,
+            favoritedBy = favoritedBy,
+            createdAt = createdAt,
+            createdByUid = createdByUid,
+            tags = tags,
+            likesCount = likesCount,
+            commentsCount = commentsCount
+        )
     }
 }

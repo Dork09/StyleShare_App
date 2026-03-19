@@ -12,8 +12,8 @@ class WeatherRecommendationEngine {
         val scoredLooks = looks.map { look -> look to scoreLook(look, profile) }
         val matchingLooks = scoredLooks.filter { it.second > 0 }
 
-        return if (matchingLooks.isNotEmpty()) {
-            matchingLooks
+        if (matchingLooks.isNotEmpty()) {
+            return matchingLooks
                 .sortedWith(
                     compareByDescending<Pair<Look, Int>> { it.second }
                         .thenByDescending { it.first.likesCount }
@@ -21,9 +21,13 @@ class WeatherRecommendationEngine {
                 )
                 .map { it.first }
                 .take(limit)
-        } else {
-            fallbackLooks(looks, limit)
         }
+
+        val neutralFallback = looks.filterNot { look ->
+            look.tags.map(::normalize).any { it in profile.conflictingTags }
+        }
+
+        return fallbackLooks(neutralFallback.ifEmpty { looks }, limit)
     }
 
     private fun scoreLook(look: Look, profile: RecommendationProfile): Int {
@@ -39,6 +43,10 @@ class WeatherRecommendationEngine {
                 else -> 0
             }
 
+            if (tag in profile.conflictingTags) {
+                score -= 4
+            }
+
             if (profile.isRainy && tag in profile.conditionBoostTags) {
                 score += 2
             }
@@ -46,6 +54,7 @@ class WeatherRecommendationEngine {
                 score += 2
             }
         }
+
         return score
     }
 
@@ -57,22 +66,29 @@ class WeatherRecommendationEngine {
             temp <= 10 -> RecommendationProfile(
                 strongSeasonalTags = setOf("חורף", "קר"),
                 directWeatherTags = setOf("מעיל", "גקט", "סוודר", "גשם"),
-                generalTags = setOf("שכבות", "קריר", "ארוך")
+                generalTags = setOf("שכבות", "קריר", "ארוך"),
+                conflictingTags = setOf("קיץ", "חם", "גופיה", "בגד ים", "קצר")
             )
+
             temp in 11.0..17.99 -> RecommendationProfile(
                 strongSeasonalTags = setOf("חורף", "סתיו"),
                 directWeatherTags = setOf("גקט", "שכבות", "קריר"),
-                generalTags = setOf("יומיומי", "קליל")
+                generalTags = setOf("יומיומי", "קליל"),
+                conflictingTags = setOf("קיץ", "חם", "גופיה", "בגד ים")
             )
+
             temp in 18.0..24.99 -> RecommendationProfile(
                 strongSeasonalTags = setOf("אביב", "סתיו"),
                 directWeatherTags = setOf("יומיומי", "קליל"),
-                generalTags = setOf("שכבות", "מעבר")
+                generalTags = setOf("שכבות", "מעבר"),
+                conflictingTags = setOf("חורף", "קיץ", "קר", "חם", "מעיל", "סוודר", "גופיה", "בגד ים")
             )
+
             else -> RecommendationProfile(
                 strongSeasonalTags = setOf("קיץ", "חם"),
                 directWeatherTags = setOf("גופיה", "בגד ים", "קליל"),
-                generalTags = setOf("יומיומי", "קצר", "נושם")
+                generalTags = setOf("יומיומי", "קצר", "נושם"),
+                conflictingTags = setOf("חורף", "קר", "מעיל", "גקט", "סוודר", "גשם")
             )
         }
 
@@ -111,6 +127,7 @@ class WeatherRecommendationEngine {
         val strongSeasonalTags: Set<String>,
         val directWeatherTags: Set<String>,
         val generalTags: Set<String>,
+        val conflictingTags: Set<String> = emptySet(),
         val conditionBoostTags: Set<String> = emptySet(),
         val isRainy: Boolean = false,
         val isSunnyHot: Boolean = false

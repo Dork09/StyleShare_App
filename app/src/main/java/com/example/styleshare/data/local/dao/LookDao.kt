@@ -33,9 +33,18 @@ interface LookDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(look: LookEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertAll(looks: List<LookEntity>)
+
     /** מחיקה */
     @Query("DELETE FROM looks WHERE id = :lookId")
     suspend fun deleteById(lookId: String)
+
+    @Query("DELETE FROM looks")
+    suspend fun deleteAll()
+
+    @Query("DELETE FROM looks WHERE id NOT IN (:keepIds)")
+    suspend fun deleteAllExcept(keepIds: List<String>)
 
     /**
      * מחזיר לוקים לפי משתמש יוצר (למסך MyLooks)
