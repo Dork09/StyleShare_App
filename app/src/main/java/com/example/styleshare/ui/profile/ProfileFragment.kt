@@ -15,6 +15,7 @@ import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.example.styleshare.R
 import com.example.styleshare.databinding.FragmentProfileBinding
+import com.example.styleshare.utils.ImageStorage
 import com.example.styleshare.utils.Result
 import com.squareup.picasso.Picasso
 import java.io.File
@@ -47,10 +48,11 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
                     val path = profile?.imagePath
                     if (!path.isNullOrEmpty()) {
-                        val req = if (path.startsWith("http")) {
-                            Picasso.get().load(path)
+                        val displayPath = ImageStorage.resolveImagePathForDisplay(requireContext(), path)
+                        val req = if (displayPath?.startsWith("http") == true) {
+                            Picasso.get().load(displayPath)
                         } else {
-                            Picasso.get().load(File(path))
+                            Picasso.get().load(File(displayPath ?: path))
                         }
                         req.fit()
                             .centerCrop()

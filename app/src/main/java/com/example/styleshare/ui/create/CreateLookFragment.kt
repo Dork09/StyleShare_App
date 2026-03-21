@@ -34,7 +34,12 @@ class CreateLookFragment : Fragment(R.layout.fragment_create_look) {
                 binding.ivPreview.visibility = View.VISIBLE
                 binding.llPickerButtons.visibility = View.GONE
                 binding.ivPreview.setImageURI(uri)
-                savedImagePath = ImageStorage.saveImageToInternalStorage(requireContext(), uri)
+                savedImagePath = ImageStorage.saveImageToInternalStorage(
+                    context = requireContext(),
+                    uri = uri,
+                    directoryName = "looks",
+                    filePrefix = "look"
+                )
             }
         }
 

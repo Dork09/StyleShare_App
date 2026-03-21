@@ -64,14 +64,6 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
                 val localLooks = repo.getFeed(uid)
                 _feedState.value = Result.Success(localLooks)
                 updateRecommendations(localLooks)
-
-                repo.refreshFeedFromRemote()
-
-                val refreshedLooks = repo.getFeed(uid)
-                if (refreshedLooks != localLooks) {
-                    _feedState.value = Result.Success(refreshedLooks)
-                    updateRecommendations(refreshedLooks)
-                }
             } catch (e: Exception) {
                 _feedState.value = Result.Error(e.message ?: "Failed loading feed")
             }
