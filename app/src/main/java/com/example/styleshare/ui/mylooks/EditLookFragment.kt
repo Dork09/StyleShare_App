@@ -59,10 +59,11 @@ class EditLookFragment : Fragment(R.layout.fragment_edit_look) {
                     binding.etTags.setText(look.tags.joinToString(", "))
                     currentImagePath = look.imagePath
 
-                    val req = if (look.imagePath.startsWith("http")) {
-                        Picasso.get().load(look.imagePath)
+                    val displayPath = ImageStorage.resolveImagePathForDisplay(requireContext(), look.imagePath)
+                    val req = if (displayPath?.startsWith("http") == true) {
+                        Picasso.get().load(displayPath)
                     } else {
-                        Picasso.get().load(File(look.imagePath))
+                        Picasso.get().load(File(displayPath ?: look.imagePath))
                     }
                     req.fit()
                         .centerInside()
@@ -105,7 +106,14 @@ class EditLookFragment : Fragment(R.layout.fragment_edit_look) {
             } else binding.etDesc.error = null
 
             val finalImagePath =
-                if (newImageUri != null) ImageStorage.saveImageToInternalStorage(requireContext(), newImageUri!!)
+                if (newImageUri != null) {
+                    ImageStorage.saveImageToInternalStorage(
+                        context = requireContext(),
+                        uri = newImageUri!!,
+                        directoryName = "looks",
+                        filePrefix = "look"
+                    )
+                }
                 else currentImagePath
 
             if (finalImagePath == null) {

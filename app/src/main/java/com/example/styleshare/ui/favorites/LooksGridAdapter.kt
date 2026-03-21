@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.styleshare.R
 import com.example.styleshare.databinding.ItemLookGridBinding
 import com.example.styleshare.model.Look
+import com.example.styleshare.utils.ImageStorage
 import com.squareup.picasso.Picasso
 import java.io.File
 
@@ -28,10 +29,11 @@ class LooksGridAdapter(
         holder.binding.tvTitle.text = look.title
         holder.binding.tvUserName.text = look.authorName
 
-        val req = if (look.imagePath.startsWith("http")) {
-            Picasso.get().load(look.imagePath)
+        val displayPath = ImageStorage.resolveImagePathForDisplay(holder.itemView.context, look.imagePath)
+        val req = if (displayPath?.startsWith("http") == true) {
+            Picasso.get().load(displayPath)
         } else {
-            Picasso.get().load(File(look.imagePath))
+            Picasso.get().load(File(displayPath ?: look.imagePath))
         }
 
         req.fit()

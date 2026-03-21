@@ -13,4 +13,7 @@ interface CommentDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertComment(comment: CommentEntity)
+
+    @Query("DELETE FROM comments WHERE lookId = :lookId")
+    suspend fun deleteCommentsForLook(lookId: String)
 }

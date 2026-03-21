@@ -42,7 +42,7 @@ class EditProfileFragment : Fragment(R.layout.fragment_edit_profile) {
                 )
 
                 Picasso.get()
-                    .load(File(selectedImagePath!!))
+                    .load(File(ImageStorage.resolveImagePathForDisplay(requireContext(), selectedImagePath) ?: selectedImagePath!!))
                     .fit()
                     .centerCrop()
                     .into(binding.ivEditProfile)
@@ -69,10 +69,11 @@ class EditProfileFragment : Fragment(R.layout.fragment_edit_profile) {
 
                     selectedImagePath = profile?.imagePath
                     if (!selectedImagePath.isNullOrEmpty()) {
-                        val req = if (selectedImagePath!!.startsWith("http")) {
-                            Picasso.get().load(selectedImagePath!!)
+                        val displayPath = ImageStorage.resolveImagePathForDisplay(requireContext(), selectedImagePath)
+                        val req = if (displayPath?.startsWith("http") == true) {
+                            Picasso.get().load(displayPath)
                         } else {
-                            Picasso.get().load(File(selectedImagePath!!))
+                            Picasso.get().load(File(displayPath ?: selectedImagePath!!))
                         }
                         req.fit()
                             .centerCrop()

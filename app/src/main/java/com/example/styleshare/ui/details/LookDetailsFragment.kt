@@ -16,6 +16,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.styleshare.R
 import com.example.styleshare.databinding.FragmentLookDetailsBinding
+import com.example.styleshare.utils.ImageStorage
 import com.example.styleshare.utils.Result
 import com.squareup.picasso.Picasso
 import java.io.File
@@ -58,10 +59,11 @@ class LookDetailsFragment : Fragment(R.layout.fragment_look_details) {
                         binding.cgTags.addView(chip)
                     }
 
-                    val req = if (look.imagePath.startsWith("http")) {
-                        Picasso.get().load(look.imagePath)
+                    val displayPath = ImageStorage.resolveImagePathForDisplay(requireContext(), look.imagePath)
+                    val req = if (displayPath?.startsWith("http") == true) {
+                        Picasso.get().load(displayPath)
                     } else {
-                        Picasso.get().load(File(look.imagePath))
+                        Picasso.get().load(File(displayPath ?: look.imagePath))
                     }
                     req.fit()
                         .centerInside()
