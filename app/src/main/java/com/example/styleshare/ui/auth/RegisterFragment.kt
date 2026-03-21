@@ -4,6 +4,7 @@
  */
 package com.example.styleshare.ui.auth
 
+import android.os.LocaleList
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
@@ -25,6 +26,10 @@ class RegisterFragment : Fragment(R.layout.fragment_register) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentRegisterBinding.bind(view)
+        val imeLocales = LocaleList.forLanguageTags("he,en")
+        binding.etUsername.imeHintLocales = imeLocales
+        binding.etEmail.imeHintLocales = imeLocales
+        binding.etPassword.imeHintLocales = imeLocales
 
         binding.btnRegister.setOnClickListener {
             val username = binding.etUsername.text?.toString().orEmpty()

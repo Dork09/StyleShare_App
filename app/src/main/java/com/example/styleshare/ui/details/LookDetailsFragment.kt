@@ -64,7 +64,7 @@ class LookDetailsFragment : Fragment(R.layout.fragment_look_details) {
                         Picasso.get().load(File(look.imagePath))
                     }
                     req.fit()
-                        .centerCrop()
+                        .centerInside()
                         .into(binding.ivLook)
 
                     binding.btnLike.text = if (look.isFavorite) "Liked" else "Like"

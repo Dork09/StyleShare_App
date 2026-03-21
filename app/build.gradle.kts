@@ -74,6 +74,8 @@ dependencies {
     // Firebase Auth בלבד (לא Storage/Firestore)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.storage)
 
     // אם אתן משתמשות מיקום/התראות לפי מיקום (אופציונלי)
     implementation(libs.play.services.location)

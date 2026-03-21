@@ -33,7 +33,8 @@
                 android:id="@+id/ivLook"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:scaleType="centerCrop" />
+                android:background="@color/bg_light"
+                android:scaleType="fitCenter" />
                 
             <!-- שכבת מעבר רכה נמחקת מכיוון שאנחנו במסך בהיר -->
         </com.google.android.material.card.MaterialCardView>

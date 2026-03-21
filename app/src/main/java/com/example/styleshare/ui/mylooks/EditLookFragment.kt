@@ -38,7 +38,7 @@ class EditLookFragment : Fragment(R.layout.fragment_edit_look) {
     /** בחירת תמונה */
     private val pickImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         newImageUri = uri
-        if (uri != null) Picasso.get().load(uri).fit().centerCrop().into(binding.ivPreview)
+        if (uri != null) Picasso.get().load(uri).fit().centerInside().into(binding.ivPreview)
     }
 
     /** UI */
@@ -65,7 +65,7 @@ class EditLookFragment : Fragment(R.layout.fragment_edit_look) {
                         Picasso.get().load(File(look.imagePath))
                     }
                     req.fit()
-                        .centerCrop()
+                        .centerInside()
                         .into(binding.ivPreview)
                 }
                 is Result.Error -> {

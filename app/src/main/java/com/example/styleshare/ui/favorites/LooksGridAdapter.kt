@@ -3,6 +3,7 @@ package com.example.styleshare.ui.favorites
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.example.styleshare.R
 import com.example.styleshare.databinding.ItemLookGridBinding
 import com.example.styleshare.model.Look
 import com.squareup.picasso.Picasso
@@ -32,19 +33,29 @@ class LooksGridAdapter(
         } else {
             Picasso.get().load(File(look.imagePath))
         }
-        
+
         req.fit()
-            .centerCrop()
+            .centerInside()
             .into(holder.binding.ivLook)
 
-        if (look.isFavorite) {
-            holder.binding.ivFavorite.setColorFilter(holder.itemView.context.getColor(com.example.styleshare.R.color.pink_gradient_start))
-        } else {
-            holder.binding.ivFavorite.setColorFilter(holder.itemView.context.getColor(com.example.styleshare.R.color.white))
-        }
+        applyFavoriteTint(holder.binding, look.isFavorite)
 
         holder.itemView.setOnClickListener { onItemClick(look) }
-        holder.binding.ivFavorite.setOnClickListener { onFavClick(look) }
+        holder.binding.ivFavorite.setOnClickListener {
+            val toggledLook = look.copy(
+                isFavorite = !look.isFavorite,
+                likesCount = if (look.isFavorite) {
+                    maxOf(0, look.likesCount - 1)
+                } else {
+                    look.likesCount + 1
+                }
+            )
+            val updatedItems = items.toMutableList()
+            updatedItems[position] = toggledLook
+            items = updatedItems
+            notifyItemChanged(position)
+            onFavClick(look)
+        }
     }
 
     override fun getItemCount(): Int = items.size
@@ -52,5 +63,10 @@ class LooksGridAdapter(
     fun submitList(newItems: List<Look>) {
         items = newItems
         notifyDataSetChanged()
+    }
+
+    private fun applyFavoriteTint(binding: ItemLookGridBinding, isFavorite: Boolean) {
+        val colorRes = if (isFavorite) R.color.pink_gradient_start else R.color.white
+        binding.ivFavorite.setColorFilter(binding.root.context.getColor(colorRes))
     }
 }

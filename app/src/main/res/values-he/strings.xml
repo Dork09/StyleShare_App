@@ -45,4 +45,7 @@
     <string name="details_favorites">מועדפים</string>
     <string name="details_edit">עריכה</string>
     <string name="details_delete">מחיקה</string>
+    <string name="language_selector">בחירת שפה</string>
+    <string name="language_hebrew">עברית</string>
+    <string name="language_english">English</string>
 </resources>
