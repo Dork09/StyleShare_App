@@ -174,6 +174,7 @@
                 android:hint="תני שם ללוק שלך..."
                 android:paddingHorizontal="16dp"
                 android:textColor="@color/text_primary"
+                android:textDirection="locale"
                 app:layout_constraintTop_toBottomOf="@id/tvTitleLabel"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
@@ -202,6 +203,7 @@
                 android:hint="ספרי לנו על הלוק - איפה את לובשת אותו?"
                 android:padding="16dp"
                 android:textColor="@color/text_primary"
+                android:textDirection="locale"
                 app:layout_constraintTop_toBottomOf="@id/tvDescLabel"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
@@ -228,6 +230,7 @@
                 android:hint="לדוגמה: אופנה, קיץ, קז'ואל"
                 android:paddingHorizontal="16dp"
                 android:textColor="@color/text_primary"
+                android:textDirection="locale"
                 app:layout_constraintTop_toBottomOf="@id/tvTagsLabel"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
@@ -257,34 +260,47 @@
         android:background="#66000000"
         android:clickable="true"
         android:focusable="true"
+        android:foregroundGravity="center"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:background="@drawable/bg_rounded_white"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="24dp">
+            android:layout_margin="24dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="8dp">
 
-            <ProgressBar
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:indeterminateTint="@color/pink_gradient_start" />
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingHorizontal="28dp"
+                android:paddingTop="24dp"
+                android:paddingBottom="20dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="יוצר את הלוק..."
-                android:textColor="@color/text_primary"
-                android:textStyle="bold" />
-        </LinearLayout>
+                <ProgressBar
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:indeterminate="true"
+                    android:indeterminateTint="@color/pink_gradient_start" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="יוצר את הלוק..."
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
     </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

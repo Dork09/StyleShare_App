@@ -1,6 +1,7 @@
 package com.example.styleshare.ui.create
 
 import android.net.Uri
+import android.os.LocaleList
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -40,6 +41,10 @@ class CreateLookFragment : Fragment(R.layout.fragment_create_look) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentCreateLookBinding.bind(view)
+        val imeLocales = LocaleList.forLanguageTags("he,en")
+        binding.etLookTitle.imeHintLocales = imeLocales
+        binding.etLookDesc.imeHintLocales = imeLocales
+        binding.etLookTags.imeHintLocales = imeLocales
 
         binding.btnGallery.setOnClickListener {
             pickImageLauncher.launch("image/*")

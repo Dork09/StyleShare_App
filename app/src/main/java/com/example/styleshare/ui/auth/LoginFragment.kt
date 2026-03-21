@@ -4,6 +4,7 @@
  */
 package com.example.styleshare.ui.auth
 
+import android.os.LocaleList
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
@@ -25,6 +26,9 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentLoginBinding.bind(view)
+        val imeLocales = LocaleList.forLanguageTags("he,en")
+        binding.etEmail.imeHintLocales = imeLocales
+        binding.etPassword.imeHintLocales = imeLocales
 
         if (vm.isLoggedIn()) {
             // --- Added: Using navigation action to clear LoginFragment from backstack so back button closes app ---
