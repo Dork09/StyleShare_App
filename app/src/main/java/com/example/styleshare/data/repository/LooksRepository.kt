@@ -1,19 +1,9 @@
-/**
- * מטרת הקובץ:
- * Repository ללוקים - שמירה מקומית ב-Room (SQLite) בלבד.
- * אחראי על:
- * - יצירת לוק
- * - טעינת פיד
- * - מועדפים
- * - עדכון/מחיקה
- */
 package com.example.styleshare.data.repository
 
 import android.content.Context
 import com.example.styleshare.data.local.db.AppDatabase
 import com.example.styleshare.data.local.entity.LookEntity
 import com.example.styleshare.data.local.entity.UserEntity
-import com.example.styleshare.data.remote.firebase.LookImagesRemoteDataSource
 import com.example.styleshare.data.remote.firebase.LookRemoteDto
 import com.example.styleshare.data.remote.firebase.LooksRemoteDataSource
 import com.example.styleshare.model.Look
@@ -22,8 +12,6 @@ import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.String
-import kotlin.collections.List
 
 class LooksRepository(context: Context) {
 
@@ -31,101 +19,85 @@ class LooksRepository(context: Context) {
     private val commentDao = AppDatabase.getInstance(context).commentDao()
     private val userDao = AppDatabase.getInstance(context).userDao()
     private val remote = LooksRemoteDataSource()
-    private val remoteImages = LookImagesRemoteDataSource()
 
-    /** מחזיר את הפיד */
-    suspend fun getFeed(currentUid: String): List<Look> {
-        return dao.getAllLooks().mapToLooks(currentUid)
-    }
+    suspend fun getFeed(currentUid: String): List<Look> =
+        dao.getAllLooks().mapToLooks(currentUid)
 
-    /** מחזיר מועדפים */
-    suspend fun getFavorites(currentUid: String): List<Look> {
-        return dao.getFavorites(currentUid).mapToLooks(currentUid)
-    }
+    suspend fun getFavorites(currentUid: String): List<Look> =
+        dao.getFavorites(currentUid).mapToLooks(currentUid)
 
-    /** מביא לוק לפי id */
-    suspend fun getLookById(lookId: String, currentUid: String): Look? {
-        return dao.getById(lookId)?.toModel(currentUid)
-    }
+    suspend fun getLookById(lookId: String, currentUid: String): Look? =
+        dao.getById(lookId)?.toModel(currentUid)
 
     /**
-     * יוצר לוק חדש ושומר אותו ב-Room (SQLite)
+     * Saves a new look. [imageUrl] must already be a Cloudinary HTTPS URL —
+     * upload via uploadImageToCloudinary() in the ViewModel before calling this.
      */
     suspend fun createLook(
         title: String,
         description: String,
-        imagePath: String,
+        imageUrl: String,
         createdByUid: String,
         tags: List<String> = emptyList(),
         likesCount: Int = 0,
         commentsCount: Int = 0,
         createdAt: Long = System.currentTimeMillis()
-    ): String {
-        return withContext(Dispatchers.IO) {
-            val newId = UUID.randomUUID().toString()
-            val resolvedImagePath = resolveRemoteImagePath(imagePath, createdByUid)
-            val entity = LookEntity(
-                id = newId,
-                title = title,
-                description = description,
-                imagePath = resolvedImagePath,
-                favoritedBy = emptyList(),
-                createdAt = createdAt,
-                createdByUid = createdByUid,
-                tags = tags,
-                likesCount = likesCount,
-                commentsCount = commentsCount
-            )
-
-            dao.upsert(entity)
-            syncLookToRemote(entity)
-            newId
-        }
+    ): String = withContext(Dispatchers.IO) {
+        val newId = UUID.randomUUID().toString()
+        val entity = LookEntity(
+            id = newId,
+            title = title,
+            description = description,
+            imageUrl = imageUrl,
+            favoritedBy = emptyList(),
+            createdAt = createdAt,
+            createdByUid = createdByUid,
+            tags = tags,
+            likesCount = likesCount,
+            commentsCount = commentsCount
+        )
+        dao.upsert(entity)
+        syncLookToRemote(entity)
+        newId
     }
 
     /**
-     * מטרת הפונקציה:
-     * עדכון לוק קיים ב-Room
-     * ✅ אם לא שלחת tags חדשים, נשמרים הישנים
+     * Updates an existing look. [imageUrl] is the Cloudinary URL — either freshly
+     * uploaded (if image changed) or the existing URL (if image unchanged).
      */
     suspend fun updateLook(
         lookId: String,
         title: String,
         description: String,
-        imagePath: String,
+        imageUrl: String,
         tags: List<String>? = null
     ) {
         val current = dao.getById(lookId) ?: return
-
         val updated = current.copy(
             title = title,
             description = description,
-            imagePath = resolveRemoteImagePath(imagePath, current.createdByUid),
-            tags = tags ?: current.tags // ✅ לא מוחק תגיות אם לא שלחת
+            imageUrl = imageUrl,
+            tags = tags ?: current.tags
         )
-
-        dao.upsert(look = updated)
+        dao.upsert(updated)
         syncLookToRemote(updated)
     }
 
-    /** משנה מועדפים וכמות לייקים בהתאמה */
     suspend fun toggleFavorite(lookId: String, currentUid: String) {
         val current = dao.getById(lookId) ?: return
-        
         val isCurrentlyFavorited = current.favoritedBy.contains(currentUid)
         val newFavoritedBy = if (isCurrentlyFavorited) {
             current.favoritedBy.filter { it != currentUid }
         } else {
             current.favoritedBy + currentUid
         }
-        
-        val newLikesCount = if (!isCurrentlyFavorited) current.likesCount + 1 else maxOf(0, current.likesCount - 1)
+        val newLikesCount = if (!isCurrentlyFavorited) current.likesCount + 1
+                            else maxOf(0, current.likesCount - 1)
         val updated = current.copy(favoritedBy = newFavoritedBy, likesCount = newLikesCount)
         dao.upsert(updated)
         syncLookToRemote(updated)
     }
 
-    /** משנה לייקים (הדגמה - כרגע רק מגדיל/מקטין) */
     suspend fun incrementLike(lookId: String) {
         val current = dao.getById(lookId) ?: return
         val updated = current.copy(likesCount = current.likesCount + 1)
@@ -133,16 +105,13 @@ class LooksRepository(context: Context) {
         syncLookToRemote(updated)
     }
 
-    /** מוחק לוק */
     suspend fun deleteLook(lookId: String) {
         dao.deleteById(lookId)
         runCatching { remote.deleteLook(lookId) }
     }
-    
-    /** מחזיר רק את הלוקים של משתמש מסוים (MyLooks) */
-    suspend fun getMyLooks(uid: String): List<Look> {
-        return dao.getLooksByUser(uid).mapToLooks(uid)
-    }
+
+    suspend fun getMyLooks(uid: String): List<Look> =
+        dao.getLooksByUser(uid).mapToLooks(uid)
 
     suspend fun refreshLooksFromRemote(force: Boolean = false) {
         val now = System.currentTimeMillis()
@@ -151,10 +120,10 @@ class LooksRepository(context: Context) {
         lastRemoteSyncAt = System.currentTimeMillis()
     }
 
-    // --- COMMESTS ---
+    // --- COMMENTS ---
 
-    suspend fun getCommentsForLook(lookId: String): List<com.example.styleshare.model.Comment> {
-        return commentDao.getCommentsForLook(lookId).map {
+    suspend fun getCommentsForLook(lookId: String): List<com.example.styleshare.model.Comment> =
+        commentDao.getCommentsForLook(lookId).map {
             com.example.styleshare.model.Comment(
                 id = it.id,
                 lookId = it.lookId,
@@ -163,10 +132,10 @@ class LooksRepository(context: Context) {
                 createdAt = it.createdAt
             )
         }
-    }
 
     suspend fun addComment(lookId: String, text: String, authorName: String? = null) {
-        val resolvedAuthorName = authorName?.trim().takeUnless { it.isNullOrEmpty() } ?: resolveCurrentUserName()
+        val resolvedAuthorName = authorName?.trim().takeUnless { it.isNullOrEmpty() }
+            ?: resolveCurrentUserName()
         val commentEntity = com.example.styleshare.data.local.entity.CommentEntity(
             id = UUID.randomUUID().toString(),
             lookId = lookId,
@@ -175,8 +144,7 @@ class LooksRepository(context: Context) {
             createdAt = System.currentTimeMillis()
         )
         commentDao.insertComment(commentEntity)
-        
-        // Update comment count on Look
+
         val currentLook = dao.getById(lookId)
         if (currentLook != null) {
             val updated = currentLook.copy(commentsCount = currentLook.commentsCount + 1)
@@ -185,20 +153,19 @@ class LooksRepository(context: Context) {
         }
     }
 
+    // --- private helpers ---
+
     private suspend fun List<LookEntity>.mapToLooks(currentUid: String): List<Look> {
         val looks = ArrayList<Look>(size)
-        for (entity in this) {
-            looks += entity.toModel(currentUid)
-        }
+        for (entity in this) looks += entity.toModel(currentUid)
         return looks
     }
 
-    /** המרה Entity -> Model */
-    private suspend fun LookEntity.toModel(currentUid: String): Look = Look(
+    private suspend fun LookEntity.toModel(currentUid: String) = Look(
         id = id,
         title = title,
         description = description,
-        imagePath = imagePath,
+        imageUrl = imageUrl,
         authorName = resolveAuthorName(createdByUid),
         isFavorite = favoritedBy.contains(currentUid),
         createdAt = createdAt,
@@ -216,11 +183,9 @@ class LooksRepository(context: Context) {
         if (currentUser?.uid == authorUid) {
             val displayName = currentUser.displayName?.trim().orEmpty()
             if (displayName.isNotBlank()) return displayName
-
             val emailPrefix = currentUser.email?.substringBefore("@").orEmpty()
             if (emailPrefix.isNotBlank()) return emailPrefix
         }
-
         return "User"
     }
 
@@ -234,11 +199,7 @@ class LooksRepository(context: Context) {
         val localLooks = dao.getAllLooks()
 
         if (remoteLooks.isEmpty()) {
-            if (localLooks.isNotEmpty()) {
-                localLooks.forEach { localLook ->
-                    syncLookToRemote(localLook)
-                }
-            }
+            if (localLooks.isNotEmpty()) localLooks.forEach { syncLookToRemote(it) }
             return
         }
 
@@ -261,12 +222,11 @@ class LooksRepository(context: Context) {
 
     private suspend fun syncLookToRemote(look: LookEntity) {
         val authorName = resolveAuthorName(look.createdByUid)
-        val remoteImagePath = resolveRemoteImagePath(look.imagePath, look.createdByUid)
         val remoteLook = LookRemoteDto(
             id = look.id,
             title = look.title,
             description = look.description,
-            imagePath = remoteImagePath,
+            imageUrl = look.imageUrl,
             createdAt = look.createdAt,
             createdByUid = look.createdByUid,
             authorName = authorName,
@@ -275,44 +235,23 @@ class LooksRepository(context: Context) {
             commentsCount = look.commentsCount,
             favoritedBy = look.favoritedBy
         )
-
         runCatching {
-            withTimeoutOrNull(8_000L) {
-                remote.upsertLook(remoteLook)
-            }
-        }
-
-        if (remoteImagePath != look.imagePath && remoteImagePath.startsWith("http")) {
-            dao.upsert(look.copy(imagePath = remoteImagePath))
+            withTimeoutOrNull(8_000L) { remote.upsertLook(remoteLook) }
         }
     }
 
-    private suspend fun resolveRemoteImagePath(imagePath: String, createdByUid: String): String {
-        if (imagePath.startsWith("http")) return imagePath
-        return runCatching {
-            withTimeoutOrNull(8_000L) {
-                remoteImages.uploadLookImage(
-                    localImagePath = imagePath,
-                    userUid = createdByUid
-                )
-            } ?: imagePath
-        }.getOrDefault(imagePath)
-    }
-
-    private fun LookRemoteDto.toEntity(): LookEntity {
-        return LookEntity(
-            id = id,
-            title = title,
-            description = description,
-            imagePath = imagePath,
-            favoritedBy = favoritedBy,
-            createdAt = createdAt,
-            createdByUid = createdByUid,
-            tags = tags,
-            likesCount = likesCount,
-            commentsCount = commentsCount
-        )
-    }
+    private fun LookRemoteDto.toEntity() = LookEntity(
+        id = id,
+        title = title,
+        description = description,
+        imageUrl = imageUrl,
+        favoritedBy = favoritedBy,
+        createdAt = createdAt,
+        createdByUid = createdByUid,
+        tags = tags,
+        likesCount = likesCount,
+        commentsCount = commentsCount
+    )
 
     private companion object {
         private var lastRemoteSyncAt: Long = 0L

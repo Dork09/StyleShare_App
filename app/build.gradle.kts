@@ -84,5 +84,7 @@ dependencies {
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp.logging)
     implementation(libs.picasso)
+    implementation(libs.cloudinary.android)
+    implementation(libs.coil)
 
 }

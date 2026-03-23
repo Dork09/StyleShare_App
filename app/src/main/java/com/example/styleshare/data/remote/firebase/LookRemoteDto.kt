@@ -4,7 +4,7 @@ data class LookRemoteDto(
     val id: String = "",
     val title: String = "",
     val description: String = "",
-    val imagePath: String = "",
+    val imageUrl: String? = null,
     val createdAt: Long = 0L,
     val createdByUid: String = "",
     val authorName: String = "",

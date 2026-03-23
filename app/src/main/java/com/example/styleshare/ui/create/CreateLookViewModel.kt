@@ -1,17 +1,14 @@
-/**
- * מטרת הקובץ:
- * ViewModel למסך יצירת לוק:
- * - שומר לוק חדש ל-Room דרך LooksRepository
- */
 package com.example.styleshare.ui.create
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.styleshare.data.repository.LooksRepository
 import com.example.styleshare.utils.Result
+import com.example.styleshare.utils.uploadImageToCloudinary
 import kotlinx.coroutines.launch
 
 class CreateLookViewModel(app: Application) : AndroidViewModel(app) {
@@ -21,18 +18,17 @@ class CreateLookViewModel(app: Application) : AndroidViewModel(app) {
     private val _state = MutableLiveData<Result<Unit>>()
     val state: LiveData<Result<Unit>> = _state
 
-
-    /** שמירת לוק חדש ל-Room */
-    fun saveLook(title: String, desc: String, imagePath: String, createdByUid: String, tags: List<String>) {
+    fun saveLook(title: String, desc: String, imageUri: Uri, createdByUid: String, tags: List<String>) {
         viewModelScope.launch {
             _state.value = Result.Loading
             try {
+                val imageUrl = uploadImageToCloudinary(getApplication(), imageUri)
                 repo.createLook(
                     title = title,
                     description = desc,
-                    imagePath = imagePath,
+                    imageUrl = imageUrl,
                     createdByUid = createdByUid,
-                    tags=tags
+                    tags = tags
                 )
                 _state.value = Result.Success(Unit)
             } catch (e: Exception) {

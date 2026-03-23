@@ -12,7 +12,7 @@ data class LookEntity(
     @PrimaryKey val id: String,
     val title: String,
     val description: String,
-    val imagePath: String,
+    val imageUrl: String?,
     val favoritedBy: List<String> = emptyList(),
     val createdAt: Long,
     val createdByUid: String,

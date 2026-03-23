@@ -13,7 +13,6 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.styleshare.R
 import com.example.styleshare.databinding.FragmentCreateLookBinding
-import com.example.styleshare.utils.ImageStorage
 import com.example.styleshare.utils.Result
 import com.google.firebase.auth.FirebaseAuth
 
@@ -25,7 +24,6 @@ class CreateLookFragment : Fragment(R.layout.fragment_create_look) {
     private val vm: CreateLookViewModel by viewModels()
 
     private var selectedImageUri: Uri? = null
-    private var savedImagePath: String? = null
 
     private val pickImageLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -34,7 +32,6 @@ class CreateLookFragment : Fragment(R.layout.fragment_create_look) {
                 binding.ivPreview.visibility = View.VISIBLE
                 binding.llPickerButtons.visibility = View.GONE
                 binding.ivPreview.setImageURI(uri)
-                savedImagePath = ImageStorage.saveImageToInternalStorage(requireContext(), uri)
             }
         }
 
@@ -46,23 +43,19 @@ class CreateLookFragment : Fragment(R.layout.fragment_create_look) {
         binding.etLookDesc.imeHintLocales = imeLocales
         binding.etLookTags.imeHintLocales = imeLocales
 
-        binding.btnGallery.setOnClickListener {
-            pickImageLauncher.launch("image/*")
-        }
-
-        binding.btnCamera.setOnClickListener {
-            pickImageLauncher.launch("image/*")
-        }
+        binding.btnGallery.setOnClickListener { pickImageLauncher.launch("image/*") }
+        binding.btnCamera.setOnClickListener  { pickImageLauncher.launch("image/*") }
 
         binding.btnSaveLook.setOnClickListener {
             val title = binding.etLookTitle.text?.toString()?.trim().orEmpty()
-            val desc = binding.etLookDesc.text?.toString()?.trim().orEmpty()
+            val desc  = binding.etLookDesc.text?.toString()?.trim().orEmpty()
 
             if (title.isBlank()) {
                 Toast.makeText(requireContext(), "חייבים למלא כותרת", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            if (savedImagePath == null) {
+            val uri = selectedImageUri
+            if (uri == null) {
                 Toast.makeText(requireContext(), "חייבים לבחור תמונה", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
@@ -70,20 +63,10 @@ class CreateLookFragment : Fragment(R.layout.fragment_create_look) {
             val uid = FirebaseAuth.getInstance().currentUser?.uid ?: "local_user"
             val rawTags = binding.etLookTags.text?.toString()?.trim().orEmpty()
             val tags = if (rawTags.isNotBlank()) {
-                rawTags.split(",")
-                    .map { it.trim().removePrefix("#") }
-                    .filter { it.isNotBlank() }
-            } else {
-                emptyList()
-            }
+                rawTags.split(",").map { it.trim().removePrefix("#") }.filter { it.isNotBlank() }
+            } else emptyList()
 
-            vm.saveLook(
-                title = title,
-                desc = desc,
-                imagePath = savedImagePath!!,
-                createdByUid = uid,
-                tags = tags
-            )
+            vm.saveLook(title = title, desc = desc, imageUri = uri, createdByUid = uid, tags = tags)
         }
 
         vm.state.observe(viewLifecycleOwner) { state ->
@@ -93,9 +76,7 @@ class CreateLookFragment : Fragment(R.layout.fragment_create_look) {
                     setSavingState(false)
                     Toast.makeText(requireContext(), "יצירת הלוק בוצעה בהצלחה!", Toast.LENGTH_SHORT).show()
                     Handler(Looper.getMainLooper()).postDelayed({
-                        if (isAdded) {
-                            findNavController().navigate(R.id.homeFragment)
-                        }
+                        if (isAdded) findNavController().navigate(R.id.homeFragment)
                     }, 900)
                 }
                 is Result.Error -> {
@@ -108,12 +89,12 @@ class CreateLookFragment : Fragment(R.layout.fragment_create_look) {
 
     private fun setSavingState(isSaving: Boolean) {
         binding.loadingOverlay.visibility = if (isSaving) View.VISIBLE else View.GONE
-        binding.btnSaveLook.isEnabled = !isSaving
-        binding.btnGallery.isEnabled = !isSaving
-        binding.btnCamera.isEnabled = !isSaving
-        binding.etLookTitle.isEnabled = !isSaving
-        binding.etLookDesc.isEnabled = !isSaving
-        binding.etLookTags.isEnabled = !isSaving
+        binding.btnSaveLook.isEnabled  = !isSaving
+        binding.btnGallery.isEnabled   = !isSaving
+        binding.btnCamera.isEnabled    = !isSaving
+        binding.etLookTitle.isEnabled  = !isSaving
+        binding.etLookDesc.isEnabled   = !isSaving
+        binding.etLookTags.isEnabled   = !isSaving
     }
 
     override fun onDestroyView() {

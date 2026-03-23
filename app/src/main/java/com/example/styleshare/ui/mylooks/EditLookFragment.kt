@@ -1,11 +1,3 @@
-/**
- * מטרת הקובץ:
- * מסך עריכת לוק:
- * - טעינת נתונים
- * - שינוי תמונה
- * - שמירה
- * - מחיקה
- */
 package com.example.styleshare.ui.mylooks
 
 import android.net.Uri
@@ -16,13 +8,11 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import coil.load
 import com.example.styleshare.R
 import com.example.styleshare.databinding.FragmentEditLookBinding
-import com.example.styleshare.utils.ImageStorage
 import com.example.styleshare.utils.Result
 import com.example.styleshare.utils.Validators
-import com.squareup.picasso.Picasso
-import java.io.File
 
 class EditLookFragment : Fragment(R.layout.fragment_edit_look) {
 
@@ -33,20 +23,18 @@ class EditLookFragment : Fragment(R.layout.fragment_edit_look) {
     private val vm: EditLookViewModel by viewModels()
 
     private var newImageUri: Uri? = null
-    private var currentImagePath: String? = null
+    private var currentImageUrl: String? = null
 
-    /** בחירת תמונה */
     private val pickImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        newImageUri = uri
-        if (uri != null) Picasso.get().load(uri).fit().centerInside().into(binding.ivPreview)
+        if (uri != null) {
+            newImageUri = uri
+            binding.ivPreview.load(uri)
+        }
     }
 
-    /** UI */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentEditLookBinding.bind(view)
-
-        vm.init(requireContext())
 
         vm.lookState.observe(viewLifecycleOwner) { state ->
             when (state) {
@@ -57,20 +45,10 @@ class EditLookFragment : Fragment(R.layout.fragment_edit_look) {
                     binding.etTitle.setText(look.title)
                     binding.etDesc.setText(look.description)
                     binding.etTags.setText(look.tags.joinToString(", "))
-                    currentImagePath = look.imagePath
-
-                    val req = if (look.imagePath.startsWith("http")) {
-                        Picasso.get().load(look.imagePath)
-                    } else {
-                        Picasso.get().load(File(look.imagePath))
-                    }
-                    req.fit()
-                        .centerInside()
-                        .into(binding.ivPreview)
+                    currentImageUrl = look.imageUrl
+                    binding.ivPreview.load(look.imageUrl)
                 }
-                is Result.Error -> {
-                    binding.progress.visibility = View.GONE
-                }
+                is Result.Error -> binding.progress.visibility = View.GONE
             }
         }
 
@@ -92,7 +70,7 @@ class EditLookFragment : Fragment(R.layout.fragment_edit_look) {
 
         binding.btnSave.setOnClickListener {
             val title = binding.etTitle.text?.toString().orEmpty()
-            val desc = binding.etDesc.text?.toString().orEmpty()
+            val desc  = binding.etDesc.text?.toString().orEmpty()
 
             if (!Validators.isNotBlank(title)) {
                 binding.etTitle.error = "כותרת חובה"
@@ -104,25 +82,24 @@ class EditLookFragment : Fragment(R.layout.fragment_edit_look) {
                 return@setOnClickListener
             } else binding.etDesc.error = null
 
-            val finalImagePath =
-                if (newImageUri != null) ImageStorage.saveImageToInternalStorage(requireContext(), newImageUri!!)
-                else currentImagePath
-
-            if (finalImagePath == null) {
+            if (newImageUri == null && currentImageUrl.isNullOrEmpty()) {
                 binding.tvHint.text = "חסרה תמונה"
                 return@setOnClickListener
             }
 
             val rawTags = binding.etTags.text?.toString()?.trim().orEmpty()
             val tags = if (rawTags.isNotBlank()) {
-                rawTags.split(",")
-                    .map { it.trim().removePrefix("#") }
-                    .filter { it.isNotBlank() }
-            } else {
-                emptyList()
-            }
+                rawTags.split(",").map { it.trim().removePrefix("#") }.filter { it.isNotBlank() }
+            } else emptyList()
 
-            vm.updateLook(args.lookId, title, desc, finalImagePath, tags)
+            vm.updateLook(
+                lookId = args.lookId,
+                title = title,
+                desc = desc,
+                newImageUri = newImageUri,
+                currentImageUrl = currentImageUrl,
+                tags = tags
+            )
         }
 
         binding.btnDelete.setOnClickListener {

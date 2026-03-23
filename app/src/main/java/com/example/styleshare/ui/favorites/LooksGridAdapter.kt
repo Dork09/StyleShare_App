@@ -3,11 +3,10 @@ package com.example.styleshare.ui.favorites
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.example.styleshare.R
 import com.example.styleshare.databinding.ItemLookGridBinding
 import com.example.styleshare.model.Look
-import com.squareup.picasso.Picasso
-import java.io.File
 
 class LooksGridAdapter(
     private var items: List<Look>,
@@ -25,18 +24,12 @@ class LooksGridAdapter(
     override fun onBindViewHolder(holder: GridLookVH, position: Int) {
         val look = items[position]
 
-        holder.binding.tvTitle.text = look.title
+        holder.binding.tvTitle.text    = look.title
         holder.binding.tvUserName.text = look.authorName
 
-        val req = if (look.imagePath.startsWith("http")) {
-            Picasso.get().load(look.imagePath)
-        } else {
-            Picasso.get().load(File(look.imagePath))
+        holder.binding.ivLook.load(look.imageUrl) {
+            crossfade(true)
         }
-
-        req.fit()
-            .centerInside()
-            .into(holder.binding.ivLook)
 
         applyFavoriteTint(holder.binding, look.isFavorite)
 
@@ -44,11 +37,8 @@ class LooksGridAdapter(
         holder.binding.ivFavorite.setOnClickListener {
             val toggledLook = look.copy(
                 isFavorite = !look.isFavorite,
-                likesCount = if (look.isFavorite) {
-                    maxOf(0, look.likesCount - 1)
-                } else {
-                    look.likesCount + 1
-                }
+                likesCount = if (look.isFavorite) maxOf(0, look.likesCount - 1)
+                             else look.likesCount + 1
             )
             val updatedItems = items.toMutableList()
             updatedItems[position] = toggledLook
