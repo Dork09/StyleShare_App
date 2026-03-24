@@ -55,12 +55,7 @@ class LooksAdapter(
         holder.binding.cardLook.setOnClickListener { onItemClick(look) }
         holder.binding.btnLike.setOnClickListener {
             val toggledLook = look.copy(
-                isFavorite = !look.isFavorite,
-                likesCount = if (look.isFavorite) {
-                    maxOf(0, look.likesCount - 1)
-                } else {
-                    look.likesCount + 1
-                }
+                isFavorite = !look.isFavorite
             )
             val updatedItems = items.toMutableList()
             updatedItems[position] = toggledLook

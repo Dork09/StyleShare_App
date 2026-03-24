@@ -108,19 +108,18 @@ class LooksRepository(context: Context) {
         syncLookToRemote(updated)
     }
 
-    /** משנה מועדפים וכמות לייקים בהתאמה */
+    /** משנה מועדפים בלבד */
     suspend fun toggleFavorite(lookId: String, currentUid: String) {
         val current = dao.getById(lookId) ?: return
-        
+
         val isCurrentlyFavorited = current.favoritedBy.contains(currentUid)
         val newFavoritedBy = if (isCurrentlyFavorited) {
             current.favoritedBy.filter { it != currentUid }
         } else {
             current.favoritedBy + currentUid
         }
-        
-        val newLikesCount = if (!isCurrentlyFavorited) current.likesCount + 1 else maxOf(0, current.likesCount - 1)
-        val updated = current.copy(favoritedBy = newFavoritedBy, likesCount = newLikesCount)
+
+        val updated = current.copy(favoritedBy = newFavoritedBy)
         dao.upsert(updated)
         syncLookToRemote(updated)
     }
