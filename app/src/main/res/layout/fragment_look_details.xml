@@ -104,7 +104,12 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_marginTop="16dp"
-            android:paddingHorizontal="24dp"
+            android:layout_marginStart="24dp"
+            android:layout_marginEnd="24dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:clipChildren="false"
+            android:clipToPadding="false"
             app:layout_constraintTop_toBottomOf="@id/cgTags"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -123,12 +128,13 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDelete"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="56dp"
                 android:text="@string/details_delete"
                 android:textColor="@color/error_color"
+                app:strokeColor="@color/error_color"
                 app:cornerRadius="16dp"
                 android:layout_marginStart="8dp" />
         </LinearLayout>

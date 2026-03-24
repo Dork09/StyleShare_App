@@ -82,10 +82,11 @@ class LookDetailsViewModel : ViewModel() {
         }
     }
 
-    /** העלאת לייקים */
-    fun incrementLike(lookId: String) {
+    /** לייק - נפרד ממועדפים */
+    fun toggleLike(lookId: String) {
         viewModelScope.launch {
-            looksRepo?.incrementLike(lookId)
+            val uid = FirebaseAuth.getInstance().currentUser?.uid ?: "guest"
+            looksRepo?.toggleLike(lookId, uid)
             loadLook(lookId)
         }
     }

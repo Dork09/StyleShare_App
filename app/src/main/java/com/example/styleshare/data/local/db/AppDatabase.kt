@@ -14,7 +14,7 @@ import com.example.styleshare.data.local.entity.UserEntity
 
 @Database(
     entities = [LookEntity::class, UserEntity::class, CommentEntity::class],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

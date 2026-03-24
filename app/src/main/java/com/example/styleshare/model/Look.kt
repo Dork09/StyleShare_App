@@ -7,6 +7,7 @@ data class Look(
     val imageUrl: String?,
     val authorName: String,
     val isFavorite: Boolean,
+    val isLiked: Boolean,
     val createdAt: Long,
     val createdByUid: String,
     val tags: List<String> = emptyList(),

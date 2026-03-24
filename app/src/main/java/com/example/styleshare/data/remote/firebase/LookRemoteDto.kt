@@ -11,5 +11,6 @@ data class LookRemoteDto(
     val tags: List<String> = emptyList(),
     val likesCount: Int = 0,
     val commentsCount: Int = 0,
-    val favoritedBy: List<String> = emptyList()
+    val favoritedBy: List<String> = emptyList(),
+    val likedBy: List<String> = emptyList()
 )

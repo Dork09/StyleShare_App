@@ -51,7 +51,7 @@ class LookDetailsFragment : Fragment(R.layout.fragment_look_details) {
                         crossfade(true)
                     }
 
-                    binding.btnLike.text = if (look.isFavorite) "Liked" else "Like"
+                    binding.btnLike.text = if (look.isLiked) "Liked" else "Like"
 
                     val currentUid = com.google.firebase.auth.FirebaseAuth.getInstance()
                         .currentUser?.uid ?: "local_user"
@@ -75,7 +75,7 @@ class LookDetailsFragment : Fragment(R.layout.fragment_look_details) {
             if (state is Result.Success) commentsAdapter.submitList(state.data)
         }
 
-        binding.btnLike.setOnClickListener { vm.toggleFavorite(args.lookId) }
+        binding.btnLike.setOnClickListener { vm.toggleLike(args.lookId) }
 
         binding.btnSendComment.setOnClickListener {
             val text = binding.etComment.text.toString()

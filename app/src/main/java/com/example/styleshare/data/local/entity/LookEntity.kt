@@ -14,6 +14,7 @@ data class LookEntity(
     val description: String,
     val imageUrl: String?,
     val favoritedBy: List<String> = emptyList(),
+    val likedBy: List<String> = emptyList(),
     val createdAt: Long,
     val createdByUid: String,
     val tags: List<String> = emptyList(),

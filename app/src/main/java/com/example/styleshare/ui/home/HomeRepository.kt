@@ -21,7 +21,7 @@ class HomeRepository(context: Context) {
     suspend fun toggleFavorite(lookId: String, currentUid: String) =
         looksRepo.toggleFavorite(lookId, currentUid)
 
-    suspend fun incrementLike(lookId: String) = looksRepo.incrementLike(lookId)
+    suspend fun toggleLike(lookId: String, currentUid: String) = looksRepo.toggleLike(lookId, currentUid)
 
     suspend fun getCurrentWeather(lat: Double, lon: Double): HomeWeather =
         weatherRepo.getCurrentWeather(lat, lon)
