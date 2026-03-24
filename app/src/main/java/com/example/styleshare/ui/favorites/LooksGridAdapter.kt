@@ -7,6 +7,8 @@ import coil.load
 import com.example.styleshare.R
 import com.example.styleshare.databinding.ItemLookGridBinding
 import com.example.styleshare.model.Look
+import com.squareup.picasso.Picasso
+import java.io.File
 
 class LooksGridAdapter(
     private var items: List<Look>,
@@ -24,21 +26,25 @@ class LooksGridAdapter(
     override fun onBindViewHolder(holder: GridLookVH, position: Int) {
         val look = items[position]
 
-        holder.binding.tvTitle.text    = look.title
+        holder.binding.tvTitle.text = look.title
         holder.binding.tvUserName.text = look.authorName
 
-        holder.binding.ivLook.load(look.imageUrl) {
-            crossfade(true)
+        val req = if (look.imagePath.startsWith("http")) {
+            Picasso.get().load(look.imagePath)
+        } else {
+            Picasso.get().load(File(look.imagePath))
         }
+
+        req.fit()
+            .centerInside()
+            .into(holder.binding.ivLook)
 
         applyFavoriteTint(holder.binding, look.isFavorite)
 
         holder.itemView.setOnClickListener { onItemClick(look) }
         holder.binding.ivFavorite.setOnClickListener {
             val toggledLook = look.copy(
-                isFavorite = !look.isFavorite,
-                likesCount = if (look.isFavorite) maxOf(0, look.likesCount - 1)
-                             else look.likesCount + 1
+                isFavorite = !look.isFavorite
             )
             val updatedItems = items.toMutableList()
             updatedItems[position] = toggledLook
