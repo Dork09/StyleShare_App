@@ -88,10 +88,10 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun incrementLike(lookId: String) {
+    fun toggleLike(lookId: String) {
         viewModelScope.launch {
             val uid = FirebaseAuth.getInstance().currentUser?.uid ?: "guest"
-            repo.incrementLike(lookId)
+            repo.toggleLike(lookId, uid)
             val updatedLooks = repo.getFeed(uid)
             _feedState.value = Result.Success(updatedLooks)
             updateRecommendations(updatedLooks)

@@ -4,12 +4,13 @@ data class LookRemoteDto(
     val id: String = "",
     val title: String = "",
     val description: String = "",
-    val imagePath: String = "",
+    val imageUrl: String? = null,
     val createdAt: Long = 0L,
     val createdByUid: String = "",
     val authorName: String = "",
     val tags: List<String> = emptyList(),
     val likesCount: Int = 0,
     val commentsCount: Int = 0,
-    val favoritedBy: List<String> = emptyList()
+    val favoritedBy: List<String> = emptyList(),
+    val likedBy: List<String> = emptyList()
 )

@@ -13,4 +13,7 @@ interface CommentDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertComment(comment: CommentEntity)
+
+    @Query("SELECT COUNT(*) FROM comments WHERE lookId = :lookId")
+    suspend fun countCommentsForLook(lookId: String): Int
 }

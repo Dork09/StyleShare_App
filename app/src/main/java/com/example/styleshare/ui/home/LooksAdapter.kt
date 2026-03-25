@@ -3,11 +3,10 @@ package com.example.styleshare.ui.home
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.example.styleshare.R
 import com.example.styleshare.databinding.ItemLookBinding
 import com.example.styleshare.model.Look
-import com.squareup.picasso.Picasso
-import java.io.File
 
 class LooksAdapter(
     private var items: List<Look>,
@@ -29,15 +28,10 @@ class LooksAdapter(
         holder.binding.tvDesc.text = look.description
         holder.binding.tvUserName.text = look.authorName
 
-        val req = if (look.imagePath.startsWith("http")) {
-            Picasso.get().load(look.imagePath)
-        } else {
-            Picasso.get().load(File(look.imagePath))
+        holder.binding.ivLook.load(look.imageUrl) {
+            scale(coil.size.Scale.FIT)
+            crossfade(true)
         }
-
-        req.fit()
-            .centerInside()
-            .into(holder.binding.ivLook)
 
         applyFavoriteTint(holder.binding, look.isFavorite)
         holder.binding.tvCommentsCount.text = "${look.commentsCount} Comments"
